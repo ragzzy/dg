@@ -38,7 +38,7 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 
 	public List<DataEntity> getAll() {
 		List<DataEntity> list = jdbcTemplate.query(
-				"SELECT * FROM data_entity_master_info WHERE entity_id > 0 ORDER BY entity_nm asc",
+				"SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm asc",
 				new DataEntityRowMapper());
 		if (list.isEmpty()) {
 			throw new NotFoundException("NO data entities found!");
@@ -49,7 +49,7 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 
 	public List<DataEntity> getDependents(int id) {
 		List<DataEntity> list = jdbcTemplate.query(
-				"SELECT * FROM data_entity_master_info demi"
+				"SELECT * FROM data_entity_master demi"
 						+ ", data_entity_hierarchy deh "
 						+ "WHERE demi.entity_id = deh.data_entity_child_id "
 						+ "  AND deh.data_entity_parent_id = :id",
@@ -67,7 +67,7 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		params.put("id", id);
 
 		List<DataEntity> list = jdbcTemplate.query(
-				"SELECT * from data_entity_master_info WHERE entity_id = :id",
+				"SELECT * from data_entity_master WHERE entity_id = :id",
 				params, new DataEntityRowMapper());
 		if (list.isEmpty()) {
 			throw new NotFoundException(
@@ -82,7 +82,7 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 
 		logger.debug("inserting dataEntity into database");
 		jdbcTemplate
-				.update("INSERT INTO data_entity_master_info (entity_nm, entity_defn, entity_ext_ref_url) "
+				.update("INSERT INTO data_entity_master (entity_nm, entity_defn, entity_ext_ref_url) "
 						+ "VALUES (:entityNm, :entityDefn, :entityExtUrl)",
 						new BeanPropertySqlParameterSource(dataEntity),
 						keyHolder);
@@ -95,7 +95,7 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 
 	public void updateDataEntity(DataEntity de) {
 		int numRowsAffected = jdbcTemplate.update(
-				"UPDATE data_entity_master_info"
+				"UPDATE data_entity_master"
 						+ "   SET entity_nm          = :entityNm, "
 						+ "       entity_defn        = :entityDefn, "
 						+ "       entity_ext_ref_url = :entityExtUrl "
@@ -114,7 +114,7 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 						+ "WHERE data_entity_parent_id = :entityId",
 				new BeanPropertySqlParameterSource(id));
 		int deNumRowsAffected = jdbcTemplate.update(
-				"DELETE FROM data_entity_master_info"
+				"DELETE FROM data_entity_master"
 						+ "WHERE entity_id = :entityId",
 				new BeanPropertySqlParameterSource(id));
 	}
