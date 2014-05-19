@@ -189,11 +189,11 @@ angularDashboardApp.controller('ViewDataEntityController', function($scope, $htt
             { field: 'entityDefn', displayName: 'Description', sortable: false, width: '70%' },
             { displayName: 'Actions', sortable: false, width: '5%',
             	cellTemplate: 
-            		  '<button class="btn btn-primary btn-xs" data-title="Edit" data-toggle="modal" data-target="#edit" data-placement="top" data-ng-click="editDataEntity(row)" rel="tooltip">'
+            		  '<button class="btn btn-primary btn-xs" data-placement="top" data-ng-click="editDataEntity(row)" rel="tooltip">'
             		     + '<span class="glyphicon glyphicon-pencil"></span>'
             		+ '</button>'
             		+ '&nbsp;'
-            		+ '<button class="btn btn-danger btn-xs" data-title="Delete" data-toggle="modal" data-target="#delete" data-placement="top" data-ng-click="deleteDataEntity(row)" rel="tooltip">'
+            		+ '<button class="btn btn-danger btn-xs" data-placement="top" data-ng-click="deleteDataEntity(row)" rel="tooltip">'
             		     + '<span class="glyphicon glyphicon-trash"></span>'
             		+ '</button>'
             }
