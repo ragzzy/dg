@@ -1,0 +1,58 @@
+﻿<div class="page-body login-page is-lockscreen login-form-fall">
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-content">
+                <p class="description">
+                    <br />
+                    <!-- this is a space filler for top padding-->
+                </p>
+                <!-- progress bar indicator -->
+                <div class="login-progressbar-indicator">
+                    <h3>0%</h3>
+                    <span>logging in...</span>
+                </div>
+            </div>
+        </div>
+        <div class="login-form">
+            <div class="login-content">
+                <form method="post"
+                      role="form"
+                      id="form_lockscreen"
+                      novalidate
+                      name="form_lockscreen"
+                      rc-submit="login()">
+                    <div class="form-group lockscreen-input">
+                        <div class="lockscreen-thumb">
+                            <img src="assets/images/lockscreen-user.png" class="img-circle" /><!-- this image will come from the server, create object in js-->
+                            <div class="lockscreen-progress-indicator">0%</div>
+                        </div>
+                        <div class="lockscreen-details">
+                            <h4>{{currentlyLoggedInUser}}</h4>
+                            <span data-login-text="logging back in...">logged off</span>
+                        </div>
+                    </div>
+                    <div class="form-group"
+                         ng-class="{'has-error': rc.loginForm.needsAttention(loginForm.password)}">
+                        <div class="input-group">
+                            <div class="input-group-addon" auto-focus-input>
+                                <i class="entypo-key"></i>
+                            </div>
+                            <input type="password" class="form-control" name="password" id="password" placeholder="Password" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block btn-login">
+                            Login
+                            <i class="entypo-login"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="login-bottom-links">
+                    <a href="#login" class="link">Login as different user <i class="entypo-right-open"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--this is weird as ng handles reference from global scope-->
+    <script src="assets/js/base-login.js"></script>
+</div>

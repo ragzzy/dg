@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!-- define angular app -->
+<html ng-app="angularDashboardApp" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Scottrade - DG</title>
+        <link rel="stylesheet" href="assets/css/core.css">
+        <script src="assets/js/jquery-1.11.0.min.js"></script>
+
+		<!-- ng-grid -->
+        <link rel="stylesheet" href="assets/css/ng-grid.min.css">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="assets/js/html5shiv.js"></script>
+            <script src="assets/js/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <!-- define angular controller -->
+    <body class="page-body" ng-controller="mainController">
+        <!-- add with-sidebar if its a two column page -->
+        <div class="page-container horizontal-menu">
+            <header class="navbar navbar-fixed-top">
+                <!-- set fixed position by adding class "navbar-fixed-top" -->
+                <div class="navbar-inner">
+                    <!-- logo -->
+                    <div class="navbar-brand">
+                        <a href="#login">
+                            <img src="assets/images/logo@2x.png" height="36" alt="" />
+                        </a>
+                    </div>
+                    <!-- notifications and other links -->
+                    <ul class="nav navbar-right pull-right">
+                        <!-- dropdowns -->
+                        <li class="dropdown">
+                            <a class="dropdown-toggle cursor-pointer" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
+                                <img src="assets/images/lockscreen-user.png" width="24" class="img-circle"/>
+                                <span class="badge badge-info accent-bg">4</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li class="top">
+                                    <p><strong>Name:</strong> Raghu Nandakumar</p>
+                                </li>
+                                <li class="top">
+                                    <p><strong>Role:</strong> DG Consultant</p>
+                                </li>
+                                <li>
+                                    <ul class="dropdown-menu-list scroller">
+                                        <li>
+                                            <a href="#">
+                                                <span class="task">
+                                                    <span class="desc text-primary">You have 4 pending actions of 10</span>
+                                                    <span class="percent">60%</span>
+                                                </span>
+                                                <span class="progress progress-striped">
+                                                    <span style="width: 60%;" class="progress-bar progress-bar-important">
+                                                        <span class="sr-only">60% Complete</span>
+                                                    </span>
+                                                </span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <div class="row pall15px">
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                                            <a class="cursor-pointer pull-left">
+                                                <i class="entypo-cog"></i>
+                                                Settings
+                                            </a>
+                                        </div>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                                            <a class="cursor-pointer pull-right">
+                                                Logout
+                                                <i class="entypo-login"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        <!-- mobile only -->
+                        <li class="visible-xs">
+                            <!-- open/close menu icon (do not remove if you want to enable menu on mobile devices) -->
+                            <div class="horizontal-mobile-menu visible-xs">
+                                <a href="#" class="with-animation">
+                                    <!-- add class "with-animation" to support animation -->
+                                    <i class="entypo-menu"></i>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                    <!-- Links -->
+                    <ul class="navbar-nav pull-right">
+                        <li ng-repeat="link in headerLinks">
+                            <a href="{{link.linkUrl}}"><i class="fa fa-{{link.linkIcon}} pr5px"></i><span>{{link.linkname}}</span></a>
+                            <ul ng-show="{{link.subLinks.length}}">
+                                <li ng-repeat="sublink in link.subLinks">
+                                    <a href="{{sublink.subLinkUrl}}"><span>{{sublink.subLinkName}}</span></a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </header>
+            <div>  <!--class="main-content"-->
+                <!--NG VIEW-->
+                <div ng-view></div>
+                <!-- Footer -->
+                <footer class="main">
+                    &copy; 2014 <strong>Data</strong> Governance @ Scottrade
+                </footer>
+            </div>
+        </div>
+        <script src="assets/js/angular/angular.min.js"></script>
+        <script src="assets/js/angular/angular-route.js"></script>
+        <script src="assets/js/ui-bootstrap-tpls-0.11.0.min.js"></script>
+        <script src="assets/js/dialogs.min.js"></script>
+        <script src="assets/js/gsap/main-gsap.js"></script>
+        <script src="assets/js/bootstrap.js"></script>
+        <script src="assets/js/joinable.js"></script>
+        <script src="assets/js/resizeable.js"></script>
+        <script src="assets/js/jquery.validate.min.js"></script>
+        <script src="assets/js/jquery.inputmask.bundle.min.js"></script>
+        <script src="assets/js/ng-grid-2.0.11.debug.js"></script>
+        <script src="assets/js/base-api.js"></script>
+        <script src="assets/js/base-custom.js"></script>
+        <script src="assets/js/base-demo.js"></script>
+
+        <!--app-->
+        <script src="app/directive.js"></script>
+        <script src="app/app.js"></script>
+    </body>
+</html>

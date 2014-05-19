@@ -1,0 +1,64 @@
+<div class="page-container horizontal-menu with-sidebar"> <!-- might have to find a way to nest this page container else where!!!! DAMN!-->
+    <div class="sidebar-menu">
+        <ul id="main-menu" class="">
+            
+            <li ng-repeat="link in sideBarLinks">
+                
+                <!--if NO sublinks exist-->
+                <a href="{{link.linkUrl}}" ng-if="!link.hasSubLinks">
+                    <i class="fa fa-{{link.linkIcon}} pr5px"></i><span>{{link.linkname}}</span>
+                </a>
+                <!--if NO sublinks exist-->
+
+                <!--if sublinks exist-->
+                <a class="cursor-pointer" ng-if="link.hasSubLinks">
+                    <i class="fa fa-{{link.linkIcon}} pr5px"></i><span>{{link.linkname}}</span>
+                </a>
+                <ul ng-if="link.hasSubLinks">
+                    <li ng-repeat="sublink in link.subLinks">
+                        <a href="{{sublink.subLinkUrl}}"><span>{{sublink.subLinkName}}</span></a>
+                    </li>
+                </ul>
+                <!--if sublinks exist-->
+
+            </li>
+            <!--
+                <li>
+                    <a>
+                        <i class="entypo-layout"></i>
+                        <span>Layouts</span>
+                    </a>
+                    <ul>
+                        <li>
+                            <a>
+                                <span>Dashboard 1</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            -->
+        </ul>
+    </div>
+    <!--Main content-->
+    <div class="main-content">
+	    <div ng-controller="ViewDataEntityController">
+			<div class="row">
+				<div class="col-sm-6">
+					<input class="form-control" ng-model="filterOptions.filterText" placeholder="Search" type="search" ng-change="search()" />
+					<span class="input-group-addon">
+						<span class="glyphicon glyphicon-search"></span>
+					</span>
+					&nbsp;&nbsp;
+	                <button ng-click="launchDialog('addDataEntity')" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span>&nbsp;Add Data Entity</button>
+	            </div>
+	        </div>
+	    	<div class="gridStyle" ng-grid="gridOptions"></div>
+	    </div>
+	    <!-- Ends Controller -->
+    </div>
+    
+    <!--this is weird as ng handles reference from global scope-->
+    <script src="assets/js/base-api.js"></script>
+    <script src="assets/js/base-custom.js"></script>
+    <script src="assets/js/base-demo.js"></script>
+</div>
