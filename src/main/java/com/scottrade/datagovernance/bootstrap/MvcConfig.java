@@ -23,6 +23,11 @@ import com.scottrade.datagovernance.dto.PersonDto;
 @EnableWebMvc
 @ComponentScan(basePackages = "com.scottrade.datagovernance.controller")
 public class MvcConfig extends WebMvcConfigurerAdapter {
+	
+    public MvcConfig() {
+        super();
+    }
+
 	@Bean
 	public BeanMappingBuilder beanMappingBuilder() {
 	    BeanMappingBuilder builder = new BeanMappingBuilder() {

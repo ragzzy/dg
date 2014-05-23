@@ -1,4 +1,4 @@
-package com.scottrade.datagovernance;
+package com.scottrade.datagovernance.blueworks;
 
 /* 
  * Licensed Materials - Property of IBM Corporation.
