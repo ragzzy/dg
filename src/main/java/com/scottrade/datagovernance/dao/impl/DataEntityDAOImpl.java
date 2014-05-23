@@ -49,14 +49,14 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 
 	public List<DataEntity> getDependents(int id) {
 		List<DataEntity> list = jdbcTemplate.query(
-				"SELECT * FROM data_entity_master demi"
-						+ ", data_entity_hierarchy deh "
-						+ "WHERE demi.entity_id = deh.data_entity_child_id "
-						+ "  AND deh.data_entity_parent_id = :id",
-				new DataEntityRowMapper());
+			"SELECT * FROM data_entity_master demi"
+					+ ", data_entity_hierarchy deh "
+					+ "WHERE demi.entity_id = deh.data_entity_child_id "
+					+ "  AND deh.data_entity_parent_id = :id",
+			new DataEntityRowMapper());
 
 		if (list.isEmpty()) {
-			throw new NotFoundException("NO data entities found!");
+			throw new NotFoundException("NO dependent entities found for Data Entity! entityId == " + id);
 		} else {
 			return list;
 		}
@@ -67,11 +67,12 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		params.put("id", id);
 
 		List<DataEntity> list = jdbcTemplate.query(
-				"SELECT * from data_entity_master WHERE entity_id = :id",
-				params, new DataEntityRowMapper());
+			"SELECT * from data_entity_master WHERE entity_id = :id",
+			params, new DataEntityRowMapper());
+
 		if (list.isEmpty()) {
 			throw new NotFoundException(
-					"NO data entity found for entityId: " + id);
+				"NO data entity found for Data Entity! entityId == " + id);
 		} else {
 			return list.get(0);
 		}
@@ -81,11 +82,11 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 
 		logger.debug("inserting dataEntity into database");
-		jdbcTemplate
-				.update("INSERT INTO data_entity_master (entity_nm, entity_defn, entity_ext_ref_url) "
-						+ "VALUES (:entityNm, :entityDefn, :entityExtUrl)",
-						new BeanPropertySqlParameterSource(dataEntity),
-						keyHolder);
+		jdbcTemplate.update(
+			"INSERT INTO data_entity_master (entity_nm, entity_defn, entity_ext_ref_url) "
+					+ "VALUES (:entityNm, :entityDefn, :entityExtUrl)",
+			new BeanPropertySqlParameterSource(dataEntity),
+			keyHolder);
 
 		Integer newId = keyHolder.getKey().intValue();
 

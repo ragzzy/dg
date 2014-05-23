@@ -1,0 +1,50 @@
+<div class="modal-header primary-bg">
+    <h4 class="modal-title text-primary">
+        <span class="glyphicon glyphicon-star"></span>
+        <strong>Data Entity Information</strong>
+    </h4>
+</div>
+<div class="modal-body">
+    <ng-form name="dataEntityDialog" novalidate role="form">
+        <div>
+            <div class="form-group input-group-lg" ng-class="{true: \'has-error\'}[dataEntityDialog.entityNm.$dirty && dataEntityDialog.entityNm.$invalid]">
+                <label class="control-label" for="entityName"> Name</label>
+                <input type="text" class="form-control" name="entityName" id="entityName" ng-model="entity.name" ng-keyup="hitEnter($event)" required>
+
+            </div>
+            <div class="form-group input-group-lg" ng-class="{true: \'has-error\'}[dataEntityDialog.entityDsc.$dirty && dataEntityDialog.entityDsc.$invalid]">
+                <label class="control-label" for="entityDesc"> Description</label>
+                <textarea class="form-control" name="entityDesc" id="entityDesc" ng-model="entity.dsc" ng-keyup="hitEnter($event)" required></textarea>
+            </div>
+            <!--
+            <div class="row">
+                <div class="col-md-12">
+                    <label>Choose Date:</label>
+                    <p class="input-group">
+                        <input type="text" class="form-control"
+                               datepicker-popup="{{format}}"
+                               ng-model="dt" 
+                               is-open="opened"
+                               min-date="minDate"
+                               max-date="'2015-06-22'"
+                               show-weeks="false"
+                               date-disabled="disabled(date, mode)"
+                               ng-required="true"
+                               close-text="Close" />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" 
+                                ng-click="open($event)">
+                                <i class="glyphicon glyphicon-calendar"></i>
+                            </button>
+                        </span>
+                    </p>
+                </div>
+            </div>
+            -->
+        </div>
+    </ng-form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="(dataEntityDialog.$dirty && dataEntityDialog.$invalid) || dataEntityDialog.$pristine">Save</button>
+</div>

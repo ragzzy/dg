@@ -12336,6 +12336,7 @@ footer.main {
   width: 100%;
   bottom: 0;
   font-size: 80%;
+  z-index: 9999;
 }
 footer.main:before,
 footer.main:after {
@@ -12798,6 +12799,9 @@ img.full-width {
 }
 .accent-color {
   color: #FFC800 !important;
+}
+.primary-bg {
+  background-color: #522b76;
 }
 .accent-bg {
   background-color: #FFC800 !important;
@@ -20298,4 +20302,111 @@ body .horizontal-menu header.navbar > ul > li#search .search-input::-moz-placeho
 body .horizontal-menu header.navbar .navbar-inner > ul > li#search .search-input:-ms-input-placeholder,
 body .horizontal-menu header.navbar > ul > li#search .search-input:-ms-input-placeholder {
   color: #e6e0f0;
+}
+.grid-default {
+  margin: 0;
+  margin-top: 55px;
+  border: 1px solid #ebebeb;
+  width: auto;
+  height: auto;
+  min-height: 450px;
+  position: relative;
+}
+.grid-default .ngTopPanel {
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+  border-bottom: 1px solid #d4d4d4;
+}
+.grid-default .ngGroupPanel {
+  background-color: transparent;
+  overflow: hidden;
+  border-bottom: 2px solid #d4d4d4;
+}
+.grid-default .ngHeaderContainer {
+  position: relative;
+  overflow: hidden;
+  height: 50px;
+  font-weight: 700;
+  background-color: transparent;
+}
+.grid-default .ngHeaderSortColumn {
+  position: absolute;
+  overflow: hidden;
+  top: 23%;
+}
+.grid-default .ngVerticalBarVisible {
+  width: 1px;
+  background-color: #f3f3f3;
+}
+.grid-default .ngFooterPanel {
+  background-color: transparent;
+  padding: 0;
+  border: none;
+  position: absolute;
+  height: 45px;
+  top: -45px;
+  font-size: 80%;
+}
+.stretch-vertical {
+  height: 100%;
+}
+.pt4px {
+  padding-top: 4px;
+}
+.pam {
+  padding: 10px 20px;
+}
+.search-box {
+  background-color: #f3f3f3;
+  border: 1px solid #ebebeb;
+  position: relative;
+  height: 35px;
+  min-width: 350px;
+}
+.search-box ::-webkit-input-placeholder {
+  color: rgba(0, 0, 0, 0.7);
+}
+.search-box :-moz-placeholder {
+  color: rgba(0, 0, 0, 0.7);
+}
+.search-box ::-moz-placeholder {
+  color: rgba(0, 0, 0, 0.7);
+}
+.search-box :-ms-input-placeholder {
+  color: rgba(0, 0, 0, 0.7);
+}
+.search-box .search-input {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  padding: 7.5px 20px;
+  padding-right: 45px;
+  width: 100%;
+  color: #aaabae;
+  -webkit-transition: 350ms opacity ease-in-out;
+  -moz-transition: 350ms opacity ease-in-out;
+  -o-transition: 350ms opacity ease-in-out;
+  transition: 350ms opacity ease-in-out;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.search-box button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  color: #aaabae;
+  padding: 7.5px 20px;
+  padding-top: 5.5px;
+}
+.search-box button i {
+  margin: 0;
 }
