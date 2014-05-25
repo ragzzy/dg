@@ -5,17 +5,37 @@
     </h4>
 </div>
 <div class="modal-body">
-    <ng-form name="dataEntityDialog" novalidate role="form">
+    <ng-form name="form.dataEntityFormDialog" novalidate role="form">
         <div>
-            <div class="form-group input-group-lg" ng-class="{true: \'has-error\'}[dataEntityDialog.entityNm.$dirty && dataEntityDialog.entityNm.$invalid]">
-                <label class="control-label" for="entityName"> Name</label>
-                <input type="text" class="form-control" name="entityName" id="entityName" ng-model="entity.name" ng-keyup="hitEnter($event)" required>
-
+            <div class="form-group input-group-lg" ng-class="{'has-error' : dataEntityFormDialog.entityNm.$dirty && dataEntityFormDialog.entityNm.$invalid }">
+                <label class="control-label" for="entityNm"> Name</label>
+                <input type="text" class="form-control" name="entityNm" id="entityNm" ng-model="entityNm" ng-keyup="hitEnter($event)" required>
             </div>
-            <div class="form-group input-group-lg" ng-class="{true: \'has-error\'}[dataEntityDialog.entityDsc.$dirty && dataEntityDialog.entityDsc.$invalid]">
-                <label class="control-label" for="entityDesc"> Description</label>
-                <textarea class="form-control" name="entityDesc" id="entityDesc" ng-model="entity.dsc" ng-keyup="hitEnter($event)" required></textarea>
+            <div class="form-group input-group-lg" ng-class="{'has-error' : dataEntityFormDialog.entityDefn.$dirty && dataEntityFormDialog.entityDefn.$invalid }">
+                <label class="control-label" for="entityDefn"> Description</label>
+                <textarea class="form-control" name="entityDefn" id="entityDefn" ng-model="entityDefn" ng-keyup="hitEnter($event)" required></textarea>
             </div>
+            <div class="form-group input-group-lg" ng-class="{'has-error' : dataEntityFormDialog.entityExtRefUrl.$dirty && dataEntityFormDialog.entityExtRefUrl.$invalid }">
+                <label class="control-label" for="entityExtRefUrl"> Link - Any external references to definitions/explanations</label>
+                <input type="text" class="form-control" name="entityExtRefUrl" id="entityExtRefUrl" ng-model="entityExtRefUrl" ng-keyup="hitEnter($event)" required>
+            </div>
+			<div class="col col-4">
+				<span class="input-group-addon">
+					<label class="checkbox"><input type="checkbox" name="checkbox" checked><i></i>Account Coding</label>
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Admin</label>
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Securities</label>
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Communication</label>
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Compass/CRM</label>
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Event</label>
+				</span>
+			</div>
+			<div class="col col-4">
+				<span class="input-group-addon">
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>HR</label>
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>IT</label>
+					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Market Data</label>
+				</span>
+			</div>
             <!--
             <div class="row">
                 <div class="col-md-12">
@@ -46,5 +66,5 @@
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="(dataEntityDialog.$dirty && dataEntityDialog.$invalid) || dataEntityDialog.$pristine">Save</button>
+    <button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="(dataEntityFormDialog.$dirty && dataEntityFormDialog.$invalid) || dataEntityFormDialog.$pristine">Save</button>
 </div>

@@ -115,8 +115,8 @@ angularDashboardApp.controller('mainController', function ($scope) {
 // =================================================================================================================================== //
 
 // BEGIN - Add Data Entity Controller
-angularDashboardApp.controller('AddDataEntityController', function ($scope, $modalInstance, data) {
-    
+angularDashboardApp.controller('AddDataEntityController', function ($scope, $modalInstance, $http, data) {
+	$scope.form = {};
     $scope.today = function () {
         $scope.dt = new Date();
     };
@@ -137,21 +137,39 @@ angularDashboardApp.controller('AddDataEntityController', function ($scope, $mod
 
     $scope.initDate = new Date('2016-15-20');
     $scope.format = 'dd-MMMM-yyyy';
-    
+
     //Modal related
     $scope.cancel = function() {
     	$modalInstance.dismiss('canceled');  
     }; // end cancel
- 	  
- 	  $scope.save = function() {
- 	    $modalInstance.close($scope.entityNm);
- 	  }; // end save
 
- 	  $scope.hitEnter = function (evt) {
- 		  if (	  angular.equals(evt.keyCode,13)
- 			   && !(angular.equals( $scope.entityNm, null ) || angular.equals( $scope.entityNm, '' ) ))
- 			  $scope.save();
- 	  }; // end hitEnter
+    $scope.save = function() {
+    	var newDataEntity = { 
+    		"entityNm"     : $scope.form.dataEntityFormDialog.entityNm.$viewValue
+    	   ,"entityDefn"   : $scope.form.dataEntityFormDialog.entityDefn.$viewValue
+    	   ,"entityExtUrl" : $scope.form.dataEntityFormDialog.entityExtRefUrl.$viewValue
+    	};
+
+    	console.log('data = ' , newDataEntity);
+    	$http.post('rest/dataEntity/add', newDataEntity)
+    	.success( function (data, status, headers, config) {
+    		console.log('data = ' , data);
+    		alert('Data Entity created: ' + data);
+    	})
+   		.error(function(data, status, headers, config) {
+   			console.log('error: data = ' , data);
+    		alert('Error creating Data Entity: ' + data);
+   		});
+
+    	$modalInstance.close('');
+    }; // end save
+
+    $scope.hitEnter = function (evt) {
+    	if (	  angular.equals(evt.keyCode,13)
+    		   && !(angular.equals( $scope.entityName, null ) || angular.equals( $scope.entityName, '' ) )) {
+    			$scope.save();
+    	}
+    }; // end hitEnter
 });
 //END   - Add Data Entity Controller
 
@@ -242,33 +260,43 @@ angularDashboardApp.controller('ManageDataEntityController', function ($scope, $
              }
          ],
          enablePaging: true,
-         enableRowSelection: false,
+         //enableRowSelection: true,
          showFooter: true,
          showColumnMenu: false,
          showFilter: false,
          headerRowHeight: 50,
+         enableHighlighting: true,
          pagingOptions: $scope.pagingOptions,
          filterOptions: $scope.filterOptions
      };
 
-     $scope.launchAddEntityDialog = function() {
-         var dlg;
-         dlg = $dialogs.create('views/templates/for-dialogs/add-entity-data.html', 'AddDataEntityController', {}, {
-             key: false,
-             back: 'static'
-         });
-         dlg.result.then(function(name) {
-             $scope.name = name;
-         }, function() {
-             $scope.name = 'You decided not to enter in your name, that makes me sad.';
-         });
-     };     
- 
- 
+     // Add Data Entity Launch dialog
+     $scope.addEntityDialog = function() {
+    	 var dlg = $dialogs.create(
+    			 'views/templates/for-dialogs/add-entity-data.html', 
+    			 'AddDataEntityController', 
+    			 {},
+    			 { key: false, back: 'static' }
+    	 );
+    	 
+//         dlg.result.then(function(name) {
+//             $scope.name = name;
+//         }, function() {
+//             $scope.name = 'You decided not to enter in your name, that makes me sad.';
+//         });
+     };
+
+     // Edit Data Entity Launch dialog
      $scope.editDataEntity = function (row) {
- 		   window.console && console.log(row.entity);
- 		   //$window.location.href= 'newPage/?id='+ row.entity.id;
- 		   // Make http request and load the screen for the entity.
+    	 window.console && console.log(row.entity);
+ 		 //$window.location.href= 'newPage/?id='+ row.entity.id;
+ 		 // Make http request and load the screen for the entity.
+    	 var dlg = $dialogs.create(
+    			 'views/templates/for-dialogs/add-entity-data.html', 
+    			 'AddDataEntityController', 
+    			 {},
+    			 { key: false, back: 'static' }
+    	 );
      };
  });
  // END   - Manage Data Entity Controller

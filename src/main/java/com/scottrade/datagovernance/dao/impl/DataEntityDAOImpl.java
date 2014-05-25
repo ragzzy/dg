@@ -37,9 +37,9 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 	}
 
 	public List<DataEntity> getAll() {
-		List<DataEntity> list = jdbcTemplate.query(
-				"SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm asc",
-				new DataEntityRowMapper());
+		List<DataEntity> list = jdbcTemplate
+				.query("SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm asc",
+						new DataEntityRowMapper());
 		if (list.isEmpty()) {
 			throw new NotFoundException("NO data entities found!");
 		} else {
@@ -56,7 +56,9 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 			new DataEntityRowMapper());
 
 		if (list.isEmpty()) {
-			throw new NotFoundException("NO dependent entities found for Data Entity! entityId == " + id);
+			throw new NotFoundException(
+					"NO dependent entities found for Data Entity! entityId == "
+							+ id);
 		} else {
 			return list;
 		}
@@ -67,12 +69,12 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		params.put("id", id);
 
 		List<DataEntity> list = jdbcTemplate.query(
-			"SELECT * from data_entity_master WHERE entity_id = :id",
-			params, new DataEntityRowMapper());
+				"SELECT * from data_entity_master WHERE entity_id = :id",
+				params, new DataEntityRowMapper());
 
 		if (list.isEmpty()) {
 			throw new NotFoundException(
-				"NO data entity found for Data Entity! entityId == " + id);
+					"NO data entity found for Data Entity! entityId == " + id);
 		} else {
 			return list.get(0);
 		}
@@ -81,12 +83,11 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 	public void insertDataEntity(DataEntity dataEntity) {
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 
-		logger.debug("inserting dataEntity into database");
+		logger.info("inserting dataEntity into database" + dataEntity);
 		jdbcTemplate.update(
-			"INSERT INTO data_entity_master (entity_nm, entity_defn, entity_ext_ref_url) "
-					+ "VALUES (:entityNm, :entityDefn, :entityExtUrl)",
-			new BeanPropertySqlParameterSource(dataEntity),
-			keyHolder);
+			"INSERT INTO data_entity_master (entity_nm, entity_defn, entity_ext_url_ref, create_user_id) "
+					+ "VALUES (:entityNm, :entityDefn, :entityExtUrl, 1)",
+			new BeanPropertySqlParameterSource(dataEntity), keyHolder);
 
 		Integer newId = keyHolder.getKey().intValue();
 
@@ -94,18 +95,18 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		dataEntity.setEntityId(newId);
 	}
 
-	public void updateDataEntity(DataEntity de) {
+	public void updateDataEntity(DataEntity dataEntity) {
 		int numRowsAffected = jdbcTemplate.update(
-				"UPDATE data_entity_master"
-						+ "   SET entity_nm          = :entityNm, "
-						+ "       entity_defn        = :entityDefn, "
-						+ "       entity_ext_ref_url = :entityExtUrl "
-						+ "   WHERE entity_id          = :entityId",
-				new BeanPropertySqlParameterSource(de));
+			"UPDATE data_entity_master"
+				+ "   SET entity_nm          = :entityNm, "
+				+ "       entity_defn        = :entityDefn, "
+				+ "       entity_ext_url_ref = :entityExtUrl "
+				+ "   WHERE entity_id        = :entityId",
+				new BeanPropertySqlParameterSource(dataEntity));
 
 		if (numRowsAffected == 0) {
-			throw new NotFoundException("No person found for id: "
-					+ de.getEntityId());
+			throw new NotFoundException("No Data Entity found for id: "
+					+ dataEntity.getEntityId());
 		}
 	}
 
@@ -114,10 +115,17 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 				"DELETE FROM data_entity_hierarchy"
 						+ "WHERE data_entity_parent_id = :entityId",
 				new BeanPropertySqlParameterSource(id));
+		if (deDependentsnumRowsAffected == 0) {
+			throw new NotFoundException("No Data Entity found for id: " + id);
+		}
+
 		int deNumRowsAffected = jdbcTemplate.update(
 				"DELETE FROM data_entity_master"
 						+ "WHERE entity_id = :entityId",
 				new BeanPropertySqlParameterSource(id));
+		if (deNumRowsAffected == 0) {
+			throw new NotFoundException("No Data Entity found for id: " + id);
+		}
 	}
 
 	private static class DataEntityRowMapper implements RowMapper<DataEntity> {
