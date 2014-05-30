@@ -1,0 +1,116 @@
+﻿[
+    {
+        "entityId": 1,
+        "entityNm": "Account Coding",
+        "entityDefn": "An arrangement or agreement by which an organization, Scottrade or other,  accepts a customer's financial assets and holds them on behalf of the customer at his or her discretion. -Investopedia",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 2,
+        "entityNm": "Admin",
+        "entityDefn": "Administration of capital / fixed assets.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 3,
+        "entityNm": "Branch -  Internal Org",
+        "entityDefn": "Branch information.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 4,
+        "entityNm": "Communication",
+        "entityDefn": "Correspondence sent to clients.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 5,
+        "entityNm": "Compass/CRM",
+        "entityDefn": "Data about customers",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 6,
+        "entityNm": "Event ",
+        "entityDefn": "Data about branch events. i.e. seminars",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 7,
+        "entityNm": "HR",
+        "entityDefn": "Payroll, Benefits, Training",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 8,
+        "entityNm": "IT",
+        "entityDefn": "Information technology.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 9,
+        "entityNm": "Market Data",
+        "entityDefn": "Market data is a general term used to represent quotation and trade data disseminated by the exchanges. This information is a hollistic view of the market.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 10,
+        "entityNm": "Organization",
+        "entityDefn": "A legal entity, which can be linked to many accounts. Internal, External, Advisor Services.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 11,
+        "entityNm": "Person - Account Representative",
+        "entityDefn": "A person, or person acting as an agent of an organization, that has completed all or a portion of the online application.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 12,
+        "entityNm": "Person - Business contacts at external organizations",
+        "entityDefn": "A person, that represents a business entity, with whom Scottrade maintains a business relationship.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 13,
+        "entityNm": "Person - Customer",
+        "entityDefn": "A person, or person acting as an agent of an organization,  that has completed the application process and has funded at least one account.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 14,
+        "entityNm": "Person - Employee",
+        "entityDefn": "A person employed by Scottrade.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 15,
+        "entityNm": "Revenue",
+        "entityDefn": "Firm revenue.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 16,
+        "entityNm": "Securities",
+        "entityDefn": "Master list of securities owned in the past, present and future by Scottrade account holders.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 17,
+        "entityNm": "Trading Platforms/ Feature Usage",
+        "entityDefn": "Customer usage of trading platforms.",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 18,
+        "entityNm": "Transactions - Account/Customer",
+        "entityDefn": "\"Activity in an account for the benefit of a customer. Activity in a G/L account to offside a client side entry.\"",
+        "entityExtUrl": null
+    },
+    {
+        "entityId": 19,
+        "entityNm": "Transactions - Firm",
+        "entityDefn": "Activity in an account for the benefit of Scottrade. i.e. daily trade settlement.",
+        "entityExtUrl": null
+    }
+]
