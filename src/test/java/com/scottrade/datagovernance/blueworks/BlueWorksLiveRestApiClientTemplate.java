@@ -53,15 +53,15 @@ public class BlueWorksLiveRestApiClientTemplate {
     /*
      * The UserList API call syntax. This and the others EXCEPT Auth are protected by HTTP Basic Authentication.
      */
-    private final static String REST_API_CALL_USERLIST = REST_API_SERVER + "/scr/api/ProcessData";
+    private final static String REST_API_CALL_USERLIST = REST_API_SERVER + "/scr/api/UserList";
 
     /*
      * The username and password credentials for the user accessing the REST API's. Here we are just hardcoding the
      * value for ease of instruction but in reality the credentials should be obtained using some other means. For
      * example, you could prompt for them or retrieve from some external database.
      */
-    private final static String REST_API_USERNAME = "rnandakumar@scottrade.com";
-    private final static String REST_API_PASSWORD = "March2014";
+    private final static String REST_API_USERNAME = "raghuatwork@gmail.com";
+    private final static String REST_API_PASSWORD = "scottrade";
 
     /*
      * The version of the API we want to use. Different versions of the API require different input parameters and

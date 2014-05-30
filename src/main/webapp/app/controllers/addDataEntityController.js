@@ -1,5 +1,4 @@
 // BEGIN - Add Data Entity Controller
-// Create angular controller
 angularDashboardApp.controller('AddDataEntityController', function ($scope, $modalInstance, data) {
 	$scope.today = function () {
         $scope.dt = new Date();

@@ -1,15 +1,19 @@
 package com.scottrade.datagovernance.domain;
 
-public class DataEntity {
+import java.io.Serializable;
+
+public class DataEntity implements Serializable {
+
+	private static final long serialVersionUID = -1L;
 
 	private int entityId;
 	private String entityNm;
 	private String entityDefn;
 	private String entityExtUrl;
 
-    public DataEntity() {
-        super();
-    }
+	public DataEntity() {
+		super();
+	}
 
 	/**
 	 * @return the entityId
@@ -71,13 +75,18 @@ public class DataEntity {
 		this.entityExtUrl = entityExtUrl;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "DataEntity [entityId=" + entityId + ", entityNm=" + entityNm
-				+ ", entityDefn=" + entityDefn + ", entityExtUrl="
-				+ entityExtUrl + "]";
+		return "DataEntity ["
+			+ "  entityId=" + entityId
+			+ ", entityNm=" + entityNm
+			+ ", entityDefn=" + entityDefn
+			+ ", entityExtUrl=" + entityExtUrl
+			+ "]";
 	}
 }

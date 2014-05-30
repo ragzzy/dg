@@ -9,7 +9,9 @@
 	<url>http://maven.apache.org</url>
 	<properties>
 		<java-version>1.7</java-version>
-		<spring.version>3.2.6.RELEASE</spring.version>
+		<!-- <spring.version>3.2.6.RELEASE</spring.version> -->
+		<spring.version>4.0.5.RELEASE</spring.version>
+		<spring.security.version>3.2.0.M2</spring.security.version>
 		<jackson.version>2.2.3</jackson.version>
 		<jetty.version>9.0.2.v20130417</jetty.version>
 		<slf4j.version>1.6.1</slf4j.version>
@@ -30,6 +32,7 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.30</version>
 		</dependency>
+
 		<!-- ********** Logging ********** -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -47,33 +50,79 @@
 			<version>${log4j.version}</version>
 		</dependency>
 
-		<!-- ********** Spring ********** -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jdbc</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+        <!-- ********** Spring Security ********** -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring.security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>${spring.security.version}</version>
+        </dependency>
+
+        <!-- ********** Spring ********** -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <!-- Mapping - Dozer -->
 		<dependency>
 	        <groupId>net.sf.dozer</groupId>
 	        <artifactId>dozer</artifactId>
 	        <version>5.4.0</version>
 		</dependency>
-		<!-- ********** Jackson ********** -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.codehaus.jackson</groupId> -->
-		<!-- <artifactId>jackson-mapper-asl</artifactId> -->
-		<!-- <version>1.9.12</version> -->
-		<!-- </dependency> -->
+
+		<!-- ********** Marshalling - Jackson ********** -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
@@ -127,7 +176,8 @@
 			<version>0.8.1</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- Apache Wink - For Test with Blueworks Live API 
+		
+		<!-- ********** Apache Wink - For Test with Blueworks Live API **********  
 		<dependency>
 		    <groupId>org.apache.wink</groupId>
 		    <artifactId>wink-server</artifactId>
@@ -200,7 +250,24 @@
 			    <target>1.7</target>
 			  </configuration>
 			</plugin>
+			<plugin>
+	            <artifactId>maven-antrun-plugin</artifactId>
+	            <executions>
+	                <execution>
+	                    <id>copy_package</id>
+	                    <phase>install</phase>
+	                    <goals>
+	                        <goal>run</goal>
+	                    </goals>
+	                    <configuration>
+	                        <tasks>
+	                            <copy file="target/DataGovernance.war"
+	                                todir="C:\Program Files (x86)\Eclipse\glassfish-4.0\glassfish4\glassfish\domains\domain1\autodeploy" />
+	                        </tasks>
+	                    </configuration>
+	                </execution>
+	            </executions>
+	        </plugin>
 		</plugins>
 	</build>
-
 </project>

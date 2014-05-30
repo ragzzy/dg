@@ -5,21 +5,42 @@
     </h4>
 </div>
 <div class="modal-body">
-    <ng-form name="form.dataEntityFormDialog" novalidate role="form">
+    <data-ng-form name="form.dataEntityFormDialog" novalidate role="form">
         <div>
-            <div class="form-group input-group-lg" ng-class="{'has-error' : dataEntityFormDialog.entityNm.$dirty && dataEntityFormDialog.entityNm.$invalid }">
+            <div class="form-group input-group-lg" data-ng-class="{'has-error' : dataEntityFormDialog.entityNm.$dirty && dataEntityFormDialog.entityNm.$invalid }">
                 <label class="control-label" for="entityNm"> Name</label>
-                <input type="text" class="form-control" name="entityNm" id="entityNm" ng-model="entityNm" ng-keyup="hitEnter($event)" required>
+                <input type="text" class="form-control" name="entityNm" id="entityNm" data-ng-model="entityNm" data-ng-keyup="hitEnter($event)" required>
             </div>
-            <div class="form-group input-group-lg" ng-class="{'has-error' : dataEntityFormDialog.entityDefn.$dirty && dataEntityFormDialog.entityDefn.$invalid }">
+            <div class="form-group input-group-lg" data-ng-class="{'has-error' : dataEntityFormDialog.entityDefn.$dirty && dataEntityFormDialog.entityDefn.$invalid }">
                 <label class="control-label" for="entityDefn"> Description</label>
-                <textarea class="form-control" name="entityDefn" id="entityDefn" ng-model="entityDefn" ng-keyup="hitEnter($event)" required></textarea>
+                <textarea class="form-control" name="entityDefn" id="entityDefn" data-ng-model="entityDefn" data-ng-keyup="hitEnter($event)" required></textarea>
             </div>
-            <div class="form-group input-group-lg" ng-class="{'has-error' : dataEntityFormDialog.entityExtRefUrl.$dirty && dataEntityFormDialog.entityExtRefUrl.$invalid }">
+            <div class="form-group input-group-lg" data-ng-class="{'has-error' : dataEntityFormDialog.entityExtRefUrl.$dirty && dataEntityFormDialog.entityExtRefUrl.$invalid }">
                 <label class="control-label" for="entityExtRefUrl"> Link - Any external references to definitions/explanations</label>
-                <input type="text" class="form-control" name="entityExtRefUrl" id="entityExtRefUrl" ng-model="entityExtRefUrl" ng-keyup="hitEnter($event)" required>
+                <input type="text" class="form-control" name="entityExtRefUrl" id="entityExtRefUrl" data-ng-model="entityExtRefUrl" data-ng-keyup="hitEnter($event)" required>
             </div>
-			<div class="col col-4">
+            <!-- 
+            <div class="form-group input-group-lg">
+                <label class="control-label" for="parentEntity"> Parent Entity(s)</label>
+                <div class="form-control">
+	                <select name="parentEntity" id="parentEntity" ui-select2="multiEntity" ng-model="parentDEmultiSelect" data-placeholder="Select parent data entity(s)">
+	    				<option value=""></option>
+	    				<option ng-repeat="de in allDEs" value="{{de.entityId}}">{{de.entityNm}}</option>
+					</select>
+				</div>
+			</div>
+			 -->
+			<div class="form-group input-group-lg">
+				<label class="control-label" for="parentDataEntitySelect"> Associated parent data entity(s)</label>
+				<input ui-select2="parentDataEntitySelect" name="parentDataEntitySelect" id="parentDataEntitySelect" data-ng-model="parentDataEntitySelect" />
+			</div>
+            <div class="form-group input-group-lg">
+                <label class="control-label" for="childDataEntitySelect"> Associated child data entity(s)</label>
+                <input ui-select2="childDataEntitySelect" name="childDataEntitySelect" id="childDataEntitySelect" data-ng-model="childDataEntitySelect" />
+            </div>
+
+            <!--
+			<div class="form-group input-group-lg">
 				<span class="input-group-addon">
 					<label class="checkbox"><input type="checkbox" name="checkbox" checked><i></i>Account Coding</label>
 					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Admin</label>
@@ -29,13 +50,15 @@
 					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Event</label>
 				</span>
 			</div>
-			<div class="col col-4">
+			<div class="form-group input-group-lg">
 				<span class="input-group-addon">
 					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>HR</label>
 					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>IT</label>
 					<label class="checkbox"><input type="checkbox" name="checkbox"><i></i>Market Data</label>
 				</span>
 			</div>
+			-->
+
             <!--
             <div class="row">
                 <div class="col-md-12">
@@ -62,9 +85,9 @@
             </div>
             -->
         </div>
-    </ng-form>
+    </data-ng-form>
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="(dataEntityFormDialog.$dirty && dataEntityFormDialog.$invalid) || dataEntityFormDialog.$pristine">Save</button>
+    <button type="button" class="btn btn-default" data-ng-click="cancel()">Cancel</button>
+    <button type="button" class="btn btn-primary" data-ng-click="save()" data-ng-disabled="(dataEntityFormDialog.$dirty && dataEntityFormDialog.$invalid) || dataEntityFormDialog.$pristine">Save</button>
 </div>

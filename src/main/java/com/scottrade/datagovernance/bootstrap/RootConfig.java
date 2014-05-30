@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
  * @author Raghu Nandakumar
  */
 @Configuration
-@Import(DatabaseConfig.class)
+@Import({DatabaseConfig.class})
 @ComponentScan(basePackages = { "com.scottrade.datagovernance.service", "com.scottrade.datagovernance.dao", "com.scottrade.datagovernance.util" })
 public class RootConfig {
 

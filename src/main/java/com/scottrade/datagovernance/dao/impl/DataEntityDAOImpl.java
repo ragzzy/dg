@@ -38,8 +38,8 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 
 	public List<DataEntity> getAll() {
 		List<DataEntity> list = jdbcTemplate
-				.query("SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm asc",
-						new DataEntityRowMapper());
+			.query("SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm asc",
+					new DataEntityRowMapper());
 		if (list.isEmpty()) {
 			throw new NotFoundException("NO data entities found!");
 		} else {
@@ -49,16 +49,16 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 
 	public List<DataEntity> getDependents(int id) {
 		List<DataEntity> list = jdbcTemplate.query(
-			"SELECT * FROM data_entity_master demi"
-					+ ", data_entity_hierarchy deh "
-					+ "WHERE demi.entity_id = deh.data_entity_child_id "
-					+ "  AND deh.data_entity_parent_id = :id",
+			"SELECT * FROM data_entity_master dem"
+				+ ", data_entity_dependency ded "
+				+ "WHERE dem.entity_id = ded.data_entity_child_id "
+				+ "  AND ded.data_entity_parent_id = :id",
 			new DataEntityRowMapper());
 
 		if (list.isEmpty()) {
 			throw new NotFoundException(
-					"NO dependent entities found for Data Entity! entityId == "
-							+ id);
+				"NO dependent entities found for Data Entity! entityId == "
+						+ id);
 		} else {
 			return list;
 		}
@@ -69,12 +69,12 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		params.put("id", id);
 
 		List<DataEntity> list = jdbcTemplate.query(
-				"SELECT * from data_entity_master WHERE entity_id = :id",
-				params, new DataEntityRowMapper());
+			"SELECT * from data_entity_master WHERE entity_id = :id",
+			params, new DataEntityRowMapper());
 
 		if (list.isEmpty()) {
 			throw new NotFoundException(
-					"NO data entity found for Data Entity! entityId == " + id);
+				"NO data entity found for Data Entity! entityId == " + id);
 		} else {
 			return list.get(0);
 		}

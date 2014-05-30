@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- define angular app -->
-<html ng-app="angularDashboardApp" lang="en">
+<html data-ng-app="angularDashboardApp" lang="en">
     <head>
         <!--Meta-->
         <meta charset="utf-8"/>
@@ -21,7 +21,9 @@
             'assets/js/jquery-ui/css/no-theme/jquery-ui-1.10.3.custom.min.css',
             'assets/css/less-base/core.css'
         -->
+		<!-- the select2 css --><link rel="stylesheet" href="assets/js/select2-3.4.8/select2.css">
         <link rel="stylesheet" href="assets/css/core.min.css">
+
         <!--jQuery-->
         <script src="assets/js/jquery-1.11.0.min.js"></script>
 
@@ -32,7 +34,7 @@
         <![endif]-->
     </head>
     <!-- define angular controller -->
-    <body class="page-body" ng-controller="mainController">
+    <body class="page-body" data-ng-controller="mainController">
         <!-- add with-sidebar if its a two column page -->
         <div class="page-container horizontal-menu">
             <header class="navbar navbar-fixed-top">
@@ -107,10 +109,10 @@
                     </ul>
                     <!-- Links -->
                     <ul class="navbar-nav pull-right">
-                        <li ng-repeat="link in headerLinks">
+                        <li data-ng-repeat="link in headerLinks">
                             <a href="{{link.linkUrl}}"><i class="fa fa-{{link.linkIcon}} pr5px"></i><span>{{link.linkname}}</span></a>
-                            <ul ng-show="{{link.subLinks.length}}">
-                                <li ng-repeat="sublink in link.subLinks">
+                            <ul data-ng-show="{{link.subLinks.length}}">
+                                <li data-ng-repeat="sublink in link.subLinks">
                                     <a href="{{sublink.subLinkUrl}}"><span>{{sublink.subLinkName}}</span></a>
                                 </li>
                             </ul>
@@ -120,7 +122,7 @@
             </header>
             <div>  <!--class="main-content"-->
                 <!--NG VIEW-->
-                <div ng-view></div>
+                <div data-ng-view></div>
                 <!-- Footer -->
                 <footer class="main">
                     &copy; 2014 <strong>Data</strong> Governance @ Scottrade
@@ -155,11 +157,17 @@
         <script src="assets/js/base-api.js"></script>
         <script src="assets/js/base-custom.js"></script>
         <script src="assets/js/base-demo.js"></script>
-        
+
+		<!-- select2 components - BEGIN -->
+        <!-- jQuery select2 --><script type="text/javascript" src="assets/js/select2-3.4.8/select2.min.js"></script>
+        <!-- Angular ui-select2 --><script type="text/javascript" src="assets/js/angular-ui/angular-ui-select2.js"></script>
+		<!-- select2 components - END   -->
+
         <!-- controllers 
         <script src="app/controllers/addDataEntityController.js"></script>
         <script src="app/controllers/manageDataEntityController.js"></script>
 		-->
+
         <!--app-->
         <script src="app/directive.js"></script>
         <script src="app/app.js"></script>

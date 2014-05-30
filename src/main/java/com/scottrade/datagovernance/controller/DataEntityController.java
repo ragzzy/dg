@@ -60,7 +60,7 @@ public class DataEntityController {
 
 	@RequestMapping(value = GET_ALL_ENTITIES, method = RequestMethod.GET)
 	public @ResponseBody
-	List<DataEntityDTO> getAllDataEntities() {
+	List<DataEntity> getAllDataEntities() {
 		logger.info("Start --> Getting ALL Data Entities = ");
 		List<DataEntityDTO> deList = null;
 		if (null != deSvc.getAll()) {
@@ -69,17 +69,18 @@ public class DataEntityController {
 				deList.add(deDTOfactory.createDataEntity(de));
 			}
 		}
-
-		return deList;
+		return deSvc.getAll();
+		//return deList;
 	}
 
 	@RequestMapping(value = GET_ENTITY, method = RequestMethod.GET)
 	public @ResponseBody
-	DataEntityDTO getDataEntity(@PathVariable int id) {
+	DataEntity getDataEntity(@PathVariable int id) {
 		logger.info("Start --> Getting a Data Entity = ");
 		DataEntity de = deSvc.getById(id);
 		if (null != de) {
-			return deDTOfactory.createDataEntity(de);
+			return de;
+			//return deDTOfactory.createDataEntity(de);
 		} else {
 			return null;
 		}

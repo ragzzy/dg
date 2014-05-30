@@ -40,8 +40,12 @@ public class WebAppInitializer implements WebApplicationInitializer {
 		mvcContext.register(MvcConfig.class);
 
 		// The main Spring MVC servlet.
-		ServletRegistration.Dynamic dispatcher = servletContext.addServlet("dispatcher", new DispatcherServlet(
-				mvcContext));
+		ServletRegistration.Dynamic dispatcher =
+			servletContext.addServlet(
+				"dispatcher",
+				new DispatcherServlet(mvcContext)
+			);
+
 		dispatcher.setLoadOnStartup(1);
 		Set<String> mappingConflicts = dispatcher.addMapping("/rest/*");
 
