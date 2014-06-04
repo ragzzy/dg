@@ -6,10 +6,10 @@
         <meta charset="utf-8"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        
+
         <!--Title-->
         <title>Data Governance @ Scottrade</title>
-        
+
         <!--
             The below files are minified into one CSS file via grunt
             LESS:
@@ -163,14 +163,18 @@
         <!-- Angular ui-select2 --><script type="text/javascript" src="assets/js/angular-ui/angular-ui-select2.js"></script>
 		<!-- select2 components - END   -->
 
-        <!-- controllers 
-        <script src="app/controllers/addDataEntityController.js"></script>
-        <script src="app/controllers/manageDataEntityController.js"></script>
-		-->
-
         <!--app-->
         <script src="app/directive.js"></script>
         <script src="app/app.js"></script>
+
+        <!-- controllers -->
+        <!-- Data Entity Controllers --> 
+        <script src="app/dataEntity/controllers/manageDataEntityController.js"></script>
+        <script src="app/dataEntity/controllers/addDataEntityController.js"></script>
+        <script src="app/dataEntity/controllers/addDataEntityController.js"></script>
+
+        <!-- App Master Controllers -->
+        <script src="app/appMaster/controllers/manageAppMasterController.js"></script>
 
     </body>
 </html>

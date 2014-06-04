@@ -2,6 +2,11 @@ package com.scottrade.datagovernance.domain;
 
 import java.io.Serializable;
 
+/**
+ * The class that represents a Data Entity and its information.
+ * @author rnandakumar
+ *
+ */
 public class DataEntity implements Serializable {
 
 	private static final long serialVersionUID = -1L;

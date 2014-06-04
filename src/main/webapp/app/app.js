@@ -3,7 +3,7 @@
 /*
 NOTE:
 Raghu, I have put all the code in a single file
-It is best practise to separate directives and controllers and routes into separate files
+It is best practice to separate directives and controllers and routes into separate files
 */
 // =================================================================================================================================== //
 // PREPARING ALL THE DIRECTIVES FOR DEP INJECTION INTO THE MAIN APP MODULE
@@ -58,12 +58,14 @@ angularDashboardApp.config(function($routeProvider) {
         .when('/entity', { templateUrl: 'pages/manageDataEntity.html', controller: 'ManageDataEntityController' })
         // Add Entity
         .when('/addDataEntity', { templateUrl: 'pages/addDataEntity.html', controller: 'AddDataEntityController' })
+        // Collect Team Functions and Processes
+        .when('/collTeamFuncBusPrcs/:dptId', { templateUrl: 'pages/collectTeamFuncBusPrcs.html', controller: 'CollectTeamFuncBusPrcsController' })
         //glossary
         .when('/glossary', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
         //dictionary
         .when('/dictionary', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
         //applications
-        .when('/applications', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
+        .when('/applications', { templateUrl: 'pages/manageAppMaster.html', controller: 'ManageAppMasterController' })
         //manage-users
         .when('/manage-users', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
         //manage-user-roles
@@ -121,356 +123,37 @@ angularDashboardApp.controller('mainController', function ($scope) {
 // =================================================================================================================================== //
 // SUB CONTROLLERS - these are passed for rendered objects inside the ng-view
 // =================================================================================================================================== //
-//BEGIN - Edit Data Entity Controller
-angularDashboardApp.controller('EditDataEntityController', function ($scope, $modalInstance, $http, data) {
-	$scope.form = {};
-    //Modal related
-    $scope.cancel = function() {
-    	$modalInstance.dismiss('canceled');  
-    }; // end cancel
+// BEGIN - Collect Team function and Business Process Controller
+angularDashboardApp.controller('CollectTeamFuncBusPrcsController', function ($rootScope, $scope, $routeParams, $route, $http, data) {
+	$scope.teamFunctions = {}; // [{id: 'choice1'}, {id: 'choice2'}, {id: 'choice3'}]; // $http to get team functions within department.
 
-    $scope.save = function() {
-    	var newDataEntity = {
-    		"entityNm"     : $scope.form.dataEntityFormDialog.entityNm.$viewValue
-    	   ,"entityDefn"   : $scope.form.dataEntityFormDialog.entityDefn.$viewValue
-    	   ,"entityExtUrl" : $scope.form.dataEntityFormDialog.entityExtRefUrl.$viewValue
-    	};
+	//If you want to use URL attributes before the website is loaded
+    $rootScope.$on('$routeChangeSuccess', function () {
+        console.log($routeParams.dptId);
+        $http.get('rest/busPrcs/');
+    });
 
-    	console.log('data = ' , newDataEntity);
-    	$http.post('rest/dataEntity/add', newDataEntity)
-    	.success( function (data, status, headers, config) {
-    		console.log('data = ' , data);
-    		alert('Data Entity created: ' + data);
-    	})
-   		.error(function(data, status, headers, config) {
-   			console.log('error: data = ' , data);
-    		alert('Error creating Data Entity: ' + data);
-   		});
+	$scope.addNewTf = function() {
+		var newTfNo = $scope.teamFunctions.length + 1;
+		$scope.teamFunctions.push({'id':'choice' + newTfNo});
+	};
+	$scope.showAddTf = function(tf) {
+		return tf.id === $scope.teamFunctions[ $scope.teamFunctions.length - 1 ].id;
+	};
 
-    	$modalInstance.close('');
-    }; // end save
-
-    $scope.hitEnter = function (evt) {
-    	if (	  angular.equals(evt.keyCode,13)
-    		   && !(angular.equals( $scope.entityNm, null ) || angular.equals( $scope.entityNm, '' ) )) {
-    			$scope.save();
-    	}
-    }; // end hitEnter
-
-    var allDEs = [
-  		{"entityId":"a","entityNm":"Account Coding"},
-  		{"entityId":"b","entityNm":"Admin"},
-  		{"entityId":"c","entityNm":"Branch -  Internal Org"},
-  		{"entityId":"d","entityNm":"Communication"},
-  		{"entityId":"e","entityNm":"Compass/CRM"},
-  		{"entityId":"f","entityNm":"Event "},
-  		{"entityId":"g","entityNm":"HR"},
-  		{"entityId":"h","entityNm":"IT"},
-  		{"entityId":"i","entityNm":"Market Data"},
-  		{"entityId":"j","entityNm":"Name"},
-  		{"entityId":"k","entityNm":"Organization"},
-  		{"entityId":"l","entityNm":"Person - Account Representative"},
-  		{"entityId":"m","entityNm":"Person - Business contacts at external organizations"},
-  		{"entityId":"n","entityNm":"Person - Customer"},
-  		{"entityId":"o","entityNm":"Person - Employee"},
-  		{"entityId":"p","entityNm":"Revenue"},
-  		{"entityId":"q","entityNm":"Securities"},
-  		{"entityId":"r","entityNm":"Trading Platforms/ Feature Usage"},
-  		{"entityId":"s","entityNm":"Transactions - Account/Customer"},
-  		{"entityId":"t","entityNm":"Transactions - Firm"}
-  	];
-
-    /*
-	setTimeout(function () {
-		$http.get('rest/allDataEntities/').success(function (data) {
-  	    	$scope.allDEs = JSON.stringify(data);
-		});
-	}, 100);
-    */
-    $scope.parentDataEntitySelect = {
-		query: function (query) {
-			var data = {results: []};
-			angular.forEach(allDEs, function(deRec, key) {
-				if (query.term.toUpperCase() === deRec.entityNm.substring(0, query.term.length).toUpperCase()) {
-					data.results.push(deRec);
-				}
-			});
-			query.callback(data);
-		}
-    };
-
-    $scope.childDataEntitySelect = {
-		minimumInputLength: 3,
-		ajax: {
-			// instead of writing the function to execute the request we use Select2's convenient helper
-			url: 'rest/allDataEntities/',
-			data: function (term, page) {
-				return {};
-			},
-			results: function (data, page) {
-				// parse the results into the format expected by Select2.
-				// since we are using custom formatting functions we do not need to alter remote JSON data
-				return { results: data };
-			}
-		}
-    };
+	$scope.showAddTfLabel = function (tf) {
+		return tf.id === $scope.teamFunctions[0].id;
+	};
 });
+// END   - Collect Team function and Business Process Controller
 
-// BEGIN - Add Data Entity Controller
-angularDashboardApp.controller('AddDataEntityController', function ($scope, $modalInstance, $http, data) {
-	$scope.form = {};
-    $scope.today = function () {
-        $scope.dt = new Date();
-    };
-    $scope.today();
-
-    $scope.clear = function () {
-        $scope.dt = null;
-    };
-    // Disable weekend selection
-    $scope.disabled = function (date, mode) {
-        return (mode === 'day' && (date.getDay() === 0 || date.getDay() === 6));
-    };
-    $scope.open = function ($event) {
-        $event.preventDefault();
-        $event.stopPropagation();
-        $scope.opened = true;
-    };
-
-    $scope.initDate = new Date('2016-15-20');
-    $scope.format = 'dd-MMMM-yyyy';
-
-    //Modal related
-    $scope.cancel = function() {
-    	$modalInstance.dismiss('canceled');  
-    }; // end cancel
-
-    $scope.save = function() {
-    	var newDataEntity = {
-    		"entityNm"     : $scope.form.dataEntityFormDialog.entityNm.$viewValue
-    	   ,"entityDefn"   : $scope.form.dataEntityFormDialog.entityDefn.$viewValue
-    	   ,"entityExtUrl" : $scope.form.dataEntityFormDialog.entityExtRefUrl.$viewValue
-    	};
-
-    	console.log('data = ' , newDataEntity);
-    	$http.post('rest/dataEntity/add', newDataEntity)
-    	.success( function (data, status, headers, config) {
-    		console.log('data = ' , data);
-    		alert('Data Entity created: ' + data);
-    	})
-   		.error(function(data, status, headers, config) {
-   			console.log('error: data = ' , data);
-    		alert('Error creating Data Entity: ' + data);
-   		});
-
-    	$modalInstance.close('');
-    }; // end save
-
-    $scope.hitEnter = function (evt) {
-    	if (	  angular.equals(evt.keyCode,13)
-    		   && !(angular.equals( $scope.entityNm, null ) || angular.equals( $scope.entityNm, '' ) )) {
-    			$scope.save();
-    	}
-    }; // end hitEnter
-
-    var allDEs = [
-		{"entityId":"a","entityNm":"Account Coding"},
-		{"entityId":"b","entityNm":"Admin"},
-		{"entityId":"c","entityNm":"Branch -  Internal Org"},
-		{"entityId":"d","entityNm":"Communication"},
-		{"entityId":"e","entityNm":"Compass/CRM"},
-		{"entityId":"f","entityNm":"Event "},
-		{"entityId":"g","entityNm":"HR"},
-		{"entityId":"h","entityNm":"IT"},
-		{"entityId":"i","entityNm":"Market Data"},
-		{"entityId":"j","entityNm":"Name"},
-		{"entityId":"k","entityNm":"Organization"},
-		{"entityId":"l","entityNm":"Person - Account Representative"},
-		{"entityId":"m","entityNm":"Person - Business contacts at external organizations"},
-		{"entityId":"n","entityNm":"Person - Customer"},
-		{"entityId":"o","entityNm":"Person - Employee"},
-		{"entityId":"p","entityNm":"Revenue"},
-		{"entityId":"q","entityNm":"Securities"},
-		{"entityId":"r","entityNm":"Trading Platforms/ Feature Usage"},
-		{"entityId":"s","entityNm":"Transactions - Account/Customer"},
-		{"entityId":"t","entityNm":"Transactions - Firm"}
-	];
-
-    /*
-    setTimeout(function () {
-	    $http.get('rest/allDataEntities/').success(function (data) {
-	        $scope.allDEs = JSON.stringify(data);
-	    });
-	}, 100);
-     */
-    $scope.parentDataEntitySelect = {
-		query: function (query) {
-	    var data = {results: []};
-	    	angular.forEach(allDEs, function(deRec, key) {
-	    		if (query.term.toUpperCase() === deRec.entityNm.substring(0, query.term.length).toUpperCase()) {
-	    			data.results.push(deRec);
-	    		}
-	    	});
-	    	query.callback(data);
-		}
-    };
-
-    $scope.childDataEntitySelect = {
-		minimumInputLength: 3,
-		ajax: {
-			// instead of writing the function to execute the request we use Select2's convenient helper
-			url: 'rest/allDataEntities/',
-			data: function (term, page) {
-				return {};
-			},
-			results: function (data, page) {
-				// parse the results into the format expected by Select2.
-				// since we are using custom formatting functions we do not need to alter remote JSON data
-				return { results: data };
-			}
-		}
-    };
-});
-//END   - Add Data Entity Controller
-
-//BEGIN - View Data Entity Controller
-angularDashboardApp.controller('ManageDataEntityController', function ($scope, $http, $rootScope, $timeout, $dialogs) {
-     $scope.filterOptions = {
-         filterText: ""
-        //useExternalFilter: true
-     };
-     $scope.totalServerItems = 0;
-     $scope.pagingOptions = {
-         pageSizes: [10, 20],
-         pageSize: 10,
-         totalServerItems: 0,
-         currentPage: 1
-     };
-     $scope.setPagingData = function(data, page, pageSize) {
-         var pagedData = data.slice((page - 1) * pageSize, page * pageSize);
-         $scope.myData = pagedData;
-         $scope.totalServerItems = data.length;
-         if (!$scope.$$phase) {
-             $scope.$apply();
-         }
-     };
-     $scope.getPagedDataAsync = function (pageSize, page, searchText) {
-         setTimeout(function () {
-             var data;
-             if (searchText) {
-                 var ft = searchText.toLowerCase();
-                 $http.get('rest/allDataEntities/').success(function (largeLoad) {
-                 //$http.get('mockData/dataEntitySample.json').success(function (largeLoad) {
-                     data = largeLoad.filter(function(item) {
-                         return JSON.stringify(item).toLowerCase().indexOf(ft) != -1;
-                     });
-                     $scope.setPagingData(data,page,pageSize);
-                 });
-             } else {
-                 $http.get('rest/allDataEntities/').success(function (largeLoad) {
-                 //$http.get('mockData/dataEntitySample.json').success(function (largeLoad) {
-                     $scope.setPagingData(largeLoad, page, pageSize);
-                 });
-             }
-         }, 100);
-     };
- 
-     $scope.filterEntity = function() {
-         var filterText = '';
-         if ($scope.filterOptions.filterText === '') {
-           $scope.filterOptions.filterText = filterText;
-         }
-         else if ($scope.filterOptions.filterText === filterText) {
-           $scope.filterOptions.filterText = '';
-         }
-     };
-     
-     $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
-     $scope.$watch('pagingOptions', function (newVal, oldVal) {
-         if (newVal !== oldVal && newVal.currentPage !== oldVal.currentPage) {
-           $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
-         }
-     }, true);
-     $scope.$watch('filterOptions', function (newVal, oldVal) {
-         if (newVal !== oldVal) {
-           $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
-         }
-     }, true);
-
-     $scope.gridOptions = {
-         data: 'myData',
-         columnDefs: [
-             {
-                 field: 'entityNm',
-                 displayName: 'Name',
-                 sortable: true,
-                 width: '20%'
-             },
-             {
-                 field: 'entityDefn',
-                 displayName: 'Description',
-                 sortable: false,
-                 width: '70%'
-             },
-             {
-                 displayName: 'Actions',
-                 sortable: false,
-                 width: '8%', //2 not included to avoid horizontal scrollbar
-                 cellTemplate: 'views/templates/for-ng-grid/edit-delete-cell-template.html'
-             }
-         ],
-         enablePaging: true,
-         //enableRowSelection: true,
-         showFooter: true,
-         showColumnMenu: false,
-         showFilter: false,
-         headerRowHeight: 50,
-         enableHighlighting: true,
-         pagingOptions: $scope.pagingOptions,
-         filterOptions: $scope.filterOptions
-     };
-
-     // Add Data Entity Launch dialog
-     $scope.addEntityDialog = function() {
-    	 var dlg = $dialogs.create(
-    			 'views/templates/for-dialogs/add-entity-data.html', 
-    			 'AddDataEntityController', 
-    			 {},
-    			 { key: false, back: 'static' }
-    	 );
-    	 
-//         dlg.result.then(function(name) {
-//             $scope.name = name;
-//         }, function() {
-//             $scope.name = 'You decided not to enter in your name, that makes me sad.';
-//         });
-     };
-
-     // Edit Data Entity Launch dialog
-     $scope.editRecord = function (row) {
-    	 window.console && console.log(row.entity);
- 		 //$window.location.href= 'newPage/?id='+ row.entity.id;
- 		 // Make http request and load the screen for the entity.
-    	 var dlg = $dialogs.create(
-    			 'views/templates/for-dialogs/editDataEntity.html', 
-    			 'EditDataEntityController', 
-    			 {},
-    			 { key: false, back: 'static' }
-    	 );
-     };
- });
- // END   - Manage Data Entity Controller
- 
-
- //=======================================================================================================================//
-    
 // LOGIN controller
 angularDashboardApp.controller('loginController', function ($scope) {
     
 });
 // LOGGED OUT controller
 angularDashboardApp.controller('loggedOutController', function ($scope) {
-    $scope.currentlyLoggedInUser = 'Justin HuHu Williams';
+    $scope.currentlyLoggedInUser = 'Justin Williams';
     $scope.session = {};
     $scope.login = function () {
         // process $scope.session

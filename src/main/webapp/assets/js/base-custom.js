@@ -20,8 +20,6 @@ var public_vars = public_vars || {};
 		public_vars.$mainContent	= public_vars.$pageContainer.find('.main-content');
 		public_vars.$sidebarUserEnv = public_vars.$sidebarMenu.find('.sidebar-user-info');
 		public_vars.$sidebarUser 	= public_vars.$sidebarUserEnv.find('.user-link');
-		
-		
 		public_vars.$body.addClass('loaded');
 		
 		// Just to make sure...
@@ -36,21 +34,12 @@ var public_vars = public_vars || {};
 			public_vars.isRightSidebar = true;
 		}
 		
-		
-		
-		
 		// Sidebar Menu Setup
 		setup_sidebar_menu();
-		
-		
-		
-		
+
 		// Horizontal Menu Setup
 		setup_horizontal_menu();
-		
-		
-		
-		
+
 		// Sidebar Collapse icon
 		public_vars.$sidebarMenu.find(".sidebar-collapse-icon").on('click', function(ev)
 		{

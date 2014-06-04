@@ -1,0 +1,27 @@
+<data-ng-form name="collectBusPrcsForm" novalidate role="form">
+    <div>
+        <!--  Add static breadcrumb tags >>> should show "Line of Business" > "Division > "Group" > "Department"-->
+        
+        <!-- Department Team dropdown -->
+        <div class="form-group input-group-lg" data-ng-class="{'has-error' : deptTeam.$dirty && deptTeam.$invalid }">
+            <label class="control-label" for="deptTeam"> Team</label>
+            <input type="text" class="form-control" name="deptTeam" id="deptTeam" data-ng-model="deptTeam" data-ng-keyup="hitEnter($event)" required>
+        </div>
+
+		<div class="form-group" data-ng-repeat="tf in teamFunctions">
+			<label for="tf" ng-show="showAddTfLabel(tf)">Function</label>
+			<button ng-show="showAddTf(tf)" ng-click="addNewTf()">
+                <span class="glyphicon glyphicon-plus"></span>&nbsp;Add another Function
+            </button>
+			<input type="text" ng-model="tf.name" name="" placeholder="Enter a team function">
+			<button ng-hide="teamFunctions.length == 1" ng-click="teamFunctions.splice($index, 1)">
+                <span class="glyphicon glyphicon-plus"></span>&nbsp;Remove
+            </button>
+		</div>
+
+        <!-- Define High-level Team Function(s) | Text box with +/- next to it to dynamically add text boxes-->
+
+        <!-- Define processes within each function -->
+        
+    </div>
+</data-ng-form>
