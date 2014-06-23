@@ -1,26 +1,26 @@
 // BEGIN - Add Data Entity Controller
-angular.module('angularDashboardApp').controller('AddDataEntityController', function ($scope, $modalInstance, $http, data) {
+angular.module('angularDashboardApp').controller('AddDataEntityController', function ($scope, $modalInstance, $http, data, $log, dataEntityStateSvc) {
 	$scope.form = {};
-    $scope.today = function () {
-        $scope.dt = new Date();
-    };
-    $scope.today();
+    // $scope.today = function () {
+    //     $scope.dt = new Date();
+    // };
+    // $scope.today();
 
-    $scope.clear = function () {
-        $scope.dt = null;
-    };
-    // Disable weekend selection
-    $scope.disabled = function (date, mode) {
-        return (mode === 'day' && (date.getDay() === 0 || date.getDay() === 6));
-    };
-    $scope.open = function ($event) {
-        $event.preventDefault();
-        $event.stopPropagation();
-        $scope.opened = true;
-    };
+    // $scope.clear = function () {
+    //     $scope.dt = null;
+    // };
+    // // Disable weekend selection
+    // $scope.disabled = function (date, mode) {
+    //     return (mode === 'day' && (date.getDay() === 0 || date.getDay() === 6));
+    // };
+    // $scope.open = function ($event) {
+    //     $event.preventDefault();
+    //     $event.stopPropagation();
+    //     $scope.opened = true;
+    // };
 
-    $scope.initDate = new Date('2016-15-20');
-    $scope.format = 'dd-MMMM-yyyy';
+    // $scope.initDate = new Date('2016-15-20');
+    // $scope.format = 'dd-MMMM-yyyy';
 
     //Modal related
     $scope.cancel = function() {
@@ -55,46 +55,18 @@ angular.module('angularDashboardApp').controller('AddDataEntityController', func
     	}
     }; // end hitEnter
 
-    var allDEs = [
-		{"entityId":"a","entityNm":"Account Coding"},
-		{"entityId":"b","entityNm":"Admin"},
-		{"entityId":"c","entityNm":"Branch -  Internal Org"},
-		{"entityId":"d","entityNm":"Communication"},
-		{"entityId":"e","entityNm":"Compass/CRM"},
-		{"entityId":"f","entityNm":"Event "},
-		{"entityId":"g","entityNm":"HR"},
-		{"entityId":"h","entityNm":"IT"},
-		{"entityId":"i","entityNm":"Market Data"},
-		{"entityId":"j","entityNm":"Name"},
-		{"entityId":"k","entityNm":"Organization"},
-		{"entityId":"l","entityNm":"Person - Account Representative"},
-		{"entityId":"m","entityNm":"Person - Business contacts at external organizations"},
-		{"entityId":"n","entityNm":"Person - Customer"},
-		{"entityId":"o","entityNm":"Person - Employee"},
-		{"entityId":"p","entityNm":"Revenue"},
-		{"entityId":"q","entityNm":"Securities"},
-		{"entityId":"r","entityNm":"Trading Platforms/ Feature Usage"},
-		{"entityId":"s","entityNm":"Transactions - Account/Customer"},
-		{"entityId":"t","entityNm":"Transactions - Firm"}
-	];
+    var allDEs = dataEntityStateSvc.getAllDEList();
 
-    /*
-    setTimeout(function () {
-	    $http.get('rest/dataEntity/all/').success(function (data) {
-	        $scope.allDEs = JSON.stringify(data);
-	    });
-	}, 100);
-     */
     $scope.parentDataEntitySelect = {
 		query: function (query) {
-	    var data = {results: []};
-	    	angular.forEach(allDEs, function(deRec, key) {
-	    		if (query.term.toUpperCase() === deRec.entityNm.substring(0, query.term.length).toUpperCase()) {
-	    			data.results.push(deRec);
-	    		}
-	    	});
-	    	query.callback(data);
-		}
+    	    var data = {results: []};
+    	    	angular.forEach(allDEs, function(deRec, key) {
+    	    		if (query.term.toUpperCase() === deRec.entityNm.substring(0, query.term.length).toUpperCase()) {
+    	    			data.results.push(deRec);
+    	    		}
+    	    	});
+    	    	query.callback(data);
+    		}
     };
 
     $scope.childDataEntitySelect = {

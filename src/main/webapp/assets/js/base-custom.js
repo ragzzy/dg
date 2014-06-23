@@ -2030,7 +2030,14 @@ function onPageAppear(callback)
 		callback();
 	}
 	
-	document.addEventListener(visibilityChange, callback, false);
+	//document.addEventListener(visibilityChange, callback, false);
+	
+	if ( !document.addEventListener ) {
+		document.attachEvent(visibilityChange, callback);
+	}
+	else {
+		document.addEventListener(visibilityChange, callback, false);
+	}
 }
 
 

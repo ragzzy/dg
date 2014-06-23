@@ -1,10 +1,5 @@
 'use strict';
 
-/*
-NOTE:
-Raghu, I have put all the code in a single file
-It is best practice to separate directives and controllers and routes into separate files
-*/
 // =================================================================================================================================== //
 // PREPARING ALL THE DIRECTIVES FOR DEP INJECTION INTO THE MAIN APP MODULE
 // =================================================================================================================================== //
@@ -19,12 +14,13 @@ var angularDashboardApp = angular.module('angularDashboardApp',
     [
         'ui.bootstrap',
         //'ng-custom-template',
-        'ngGrid',
+        'ngTable',
         'ngRoute',
         'rcForm',
         'autoFocusInput',
         'dialogs',
-        'ui.select2'
+        'ui.select2',
+        'nvd3'
     ]);
 
 // =================================================================================================================================== //
@@ -54,12 +50,20 @@ angularDashboardApp.config(function($routeProvider) {
         .when('/error', { templateUrl: 'pages/error-404.html', controller: 'loginController' })
         //home dashboard
         .when('/home', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
+
         // Data Entity
-        .when('/entity', { templateUrl: 'pages/manageDataEntity.html', controller: 'ManageDataEntityController' })
+        .when('/dataEntity', { templateUrl: 'app/dataEntity/pages/manageDataEntity.html', controller: 'ManageDataEntityController' })
+        // ADD Entity
+        .when('/addDataEntity', { templateUrl: 'app/dataEntity/pages/dialogs/addDataEntity.html', controller: 'AddDataEntityController' })
+        // EDIT Entity
+        .when('/editDataEntity', { templateUrl: 'app/dataEntity/pages/dialogs/editDataEntity.html', controller: 'EditDataEntityController' })
         // Add Entity
-        .when('/addDataEntity', { templateUrl: 'pages/addDataEntity.html', controller: 'AddDataEntityController' })
+        .when('/deleteDataEntity', { templateUrl: 'app/dataEntity/pages/dialogs/deleteDataEntity.html', controller: 'DeleteDataEntityController' })
+
         // Collect Team Functions and Processes
-        .when('/collTeamFuncBusPrcs/:dptId', { templateUrl: 'pages/collectTeamFuncBusPrcs.html', controller: 'CollectTeamFuncBusPrcsController' })
+        .when('/collectBusinessPrcs/:dptId', { templateUrl: 'pages/collectBusinessPrcs.html', controller: 'CollectBusinessPrcsController' })
+        // Dashboard
+        .when('/dashboard', { templateUrl: 'pages/dashboard.html', controller: 'DashboardController' })
         //glossary
         .when('/glossary', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
         //dictionary
@@ -86,16 +90,22 @@ angularDashboardApp.config(function($routeProvider) {
 // =================================================================================================================================== //
 // MAIN ADMIN WHOLISTIC controller
 // =================================================================================================================================== //
-angularDashboardApp.controller('mainController', function ($scope) {
+angularDashboardApp.controller('mainController', function ($scope, dataEntityStateSvc) {
+
+    // // // preloads \\ \\ \\
+    // data entities.
+    dataEntityStateSvc.query();
+
     //header banner links
     $scope.headerLinks = [
-        { linkname: 'Home', linkIcon: 'home', linkUrl: '#home' , subLinks: [] },
-        { linkname: 'Policies', linkIcon: 'globe', linkUrl: '#policies', subLinks: [], hasSubLinks: false },
-        { linkname: 'Glossary', linkIcon: 'globe', linkUrl: '#glossary', subLinks: [] },
-        { linkname: 'Dictionary', linkIcon: 'book', linkUrl: '#dictionary', subLinks: [] },
-        { linkname: 'Entity', linkIcon: 'key', linkUrl: '#entity', subLinks: [] },
-        { linkname: 'Applications', linkIcon: 'briefcase', linkUrl: '#applications', subLinks: [] },
-        {
+        { linkname: 'Home', linkIcon: 'home', linkUrl: '#home' , subLinks: [] }
+       ,{ linkname: 'Dashboard', linkIcon: 'dashboard', linkUrl: '#dashboard' , subLinks: [] }
+       ,{ linkname: 'Policies', linkIcon: 'anchor', linkUrl: '#policies', subLinks: [] }
+       ,{ linkname: 'Glossary', linkIcon: 'globe', linkUrl: '#glossary', subLinks: [] }
+       ,{ linkname: 'Dictionary', linkIcon: 'book', linkUrl: '#dictionary', subLinks: [] }
+       ,{ linkname: 'Entity', linkIcon: 'key', linkUrl: '#dataEntity', subLinks: [] }
+       ,{ linkname: 'Applications', linkIcon: 'briefcase', linkUrl: '#applications', subLinks: [] }
+       ,{
             linkname: 'Manage', linkIcon: 'cogs', linkUrl: '#manage-users',
             subLinks: [
                  { subLinkName: 'User', subLinkUrl: '#manage-users' }
@@ -178,10 +188,11 @@ angularDashboardApp.controller('404Controller', function ($scope) {
 angularDashboardApp.controller('sampleManageController', function ($scope) {
     $scope.sideBarLinks = [
         { linkname: 'Home', linkIcon: 'home', linkUrl: '#home', subLinks: [], hasSubLinks: false },
-        { linkname: 'Policies', linkIcon: 'globe', linkUrl: '#policies', subLinks: [], hasSubLinks: false },
+        { linkname: 'Dashboard', linkIcon: 'dashboard', linkUrl: '#dashboard', subLinks: [], hasSubLinks: false },
+        { linkname: 'Policies', linkIcon: 'anchor', linkUrl: '#policies', subLinks: [], hasSubLinks: false },
         { linkname: 'Glossary', linkIcon: 'globe', linkUrl: '#glossary', subLinks: [], hasSubLinks: false },
         { linkname: 'Dictionary', linkIcon: 'book', linkUrl: '#dictionary', subLinks: [], hasSubLinks: false },
-        { linkname: 'Entity', linkIcon: 'key', linkUrl: '#entity', subLinks: [], hasSubLinks: false },
+        { linkname: 'Entity', linkIcon: 'key', linkUrl: '#dataEntity', subLinks: [], hasSubLinks: false },
         { linkname: 'Applications', linkIcon: 'briefcase', linkUrl: '#applications', subLinks: [], hasSubLinks: true },
         {
             linkname: 'Manage', linkIcon: 'cogs', linkUrl: '#manage-users',

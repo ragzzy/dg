@@ -1,0 +1,21 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\PROGRA~2\\Eclipse\\nodejs\\\\node.exe',
+1 verbose cli   'C:\\PROGRA~2\\Eclipse\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'start',
+1 verbose cli   'app.js' ]
+2 info using npm@1.4.7
+3 info using node@v0.10.26
+4 verbose node symlink C:\PROGRA~2\Eclipse\nodejs\\node.exe
+5 error Error: ENOENT, open 'C:\RNANDAKUMAR\Devl\Workspace\testCombo\node_modules\app.js\package.json'
+6 error If you need help, you may report this *entire* log,
+6 error including the npm and node versions, at:
+6 error     <http://github.com/npm/npm/issues>
+7 error System Windows_NT 6.1.7601
+8 error command "C:\\PROGRA~2\\Eclipse\\nodejs\\\\node.exe" "C:\\PROGRA~2\\Eclipse\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "start" "app.js"
+9 error cwd C:\RNANDAKUMAR\Devl\Workspace\testCombo\app
+10 error node -v v0.10.26
+11 error npm -v 1.4.7
+12 error path C:\RNANDAKUMAR\Devl\Workspace\testCombo\node_modules\app.js\package.json
+13 error code ENOENT
+14 error errno 34
+15 verbose exit [ 34, true ]

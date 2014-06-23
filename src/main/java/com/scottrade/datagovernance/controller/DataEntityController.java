@@ -77,7 +77,7 @@ public class DataEntityController {
 		}
 	}
 
-	@RequestMapping(value = DELETE_ENTITY, method = RequestMethod.GET)
+	@RequestMapping(value = DELETE_ENTITY, method = RequestMethod.DELETE)
 	public @ResponseBody
 	String purgeDataEntity(@PathVariable int id) {
 		logger.info("Start --> Deleting a Data Entity = ");
@@ -92,7 +92,7 @@ public class DataEntityController {
 	 * @param dateEntity
 	 * @return String indicating success or failure of save
 	 */
-	@RequestMapping(value = EDIT_ENTITY, method = RequestMethod.POST)
+	@RequestMapping(value = EDIT_ENTITY, method = RequestMethod.PUT)
 	@ResponseBody
 	public String modifyDataEntity(@RequestBody DataEntity dataEntity) {
 		logger.info("Start --> SAVE a Data Entity = " + dataEntity);
@@ -109,7 +109,7 @@ public class DataEntityController {
 	 * @param dateEntity
 	 * @return String indicating success or failure of save
 	 */
-	@RequestMapping(value = ADD_ENTITY, method = RequestMethod.POST)
+	@RequestMapping(value = ADD_ENTITY, method = RequestMethod.PUT)
 	@ResponseBody
 	public String createDataEntity(@RequestBody DataEntity dataEntity) {
 		logger.info("Start --> SAVE a Data Entity = " + dataEntity);

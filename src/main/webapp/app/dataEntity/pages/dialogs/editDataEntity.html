@@ -1,7 +1,13 @@
+<script>
+    $(function() {
+        var opts=$('#source').html(), opts2='<option></option>'+opts;
+        $('select.populate').each(function() { var e=$(this); e.html(e.hasClass('placeholder')?opts2:opts); });
+    });
+</script>
 <div class="modal-header primary-bg">
     <h4 class="modal-title text-primary">
         <span class="glyphicon glyphicon-star"></span>
-        <strong>Data Entity Information</strong>
+        <strong>Edit Data Entity - {{entityNm}}</strong>
     </h4>
 </div>
 <div class="modal-body">
@@ -19,26 +25,42 @@
                 <label class="control-label" for="entityExtRefUrl"> Link - Any external references to definitions/explanations</label>
                 <input type="text" class="form-control" name="entityExtRefUrl" id="entityExtRefUrl" data-ng-model="entityExtRefUrl" data-ng-keyup="hitEnter($event)" required>
             </div>
+            <div class="form-group">
+                <label ng-repeat="fruit in fruits" class="checkbox-inline">
+                <!--
+                - use `value="{{fruit.name}}"` to give the input a real value, in case the form gets submitted
+                traditionally
+
+                - use `ng-checked="fruit.selected"` to have the checkbox checked based on some angular expression
+                (no two-way-data-binding)
+
+                - use `ng-model="fruit.selected"` to utilize two-way-data-binding. Note that `.selected`
+                is arbitrary. The property name could be anything and will be created on the object if not present.
+                -->
+                    <input type="checkbox" name="selectedFruits[]" value="{{fruitName}}" ng-model="fruit.selected"> {{fruit.name}}
+                </label>
+            </div>
             <!-- 
             <div class="form-group input-group-lg">
                 <label class="control-label" for="parentEntity"> Parent Entity(s)</label>
                 <div class="form-control">
-                    <select name="parentEntity" id="parentEntity" ui-select2="multiEntity" ng-model="parentDEmultiSelect" data-placeholder="Select parent data entity(s)">
+                    <select name="parentEntity" id="parentEntity" ui-select2="multiEntity" ng-model="parentDataEntitySelect" data-placeholder="Select parent data entity(s)">
                         <option value=""></option>
                         <option ng-repeat="de in allDEs" value="{{de.entityId}}">{{de.entityNm}}</option>
                     </select>
                 </div>
             </div>
              -->
+            <!--
             <div class="form-group input-group-lg">
                 <label class="control-label" for="parentDataEntitySelect"> Associated parent data entity(s)</label>
-                <input ui-select2="parentDataEntitySelect" name="parentDataEntitySelect" id="parentDataEntitySelect" data-ng-model="parentDataEntitySelect" />
+                <select ui-select2="parentDataEntitySelect" multiple ng-model="parentDataEntitySelect" class="populate"></select>
             </div>
             <div class="form-group input-group-lg">
                 <label class="control-label" for="childDataEntitySelect"> Associated child data entity(s)</label>
                 <input ui-select2="childDataEntitySelect" name="childDataEntitySelect" id="childDataEntitySelect" data-ng-model="childDataEntitySelect" />
             </div>
-
+            -->
             <!--
             <div class="form-group input-group-lg">
                 <span class="input-group-addon">
