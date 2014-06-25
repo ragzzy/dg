@@ -82,9 +82,10 @@ angular.module('angularDashboardApp').controller('ManageBusProcessController', f
             { field: 'busOwnerTitle',  displayName: 'Owner Title',        sortable: false, toolTip:'description', width: '10%' },
             { field: 'busOwnerDeptNm', displayName: 'Department',         sortable: false, toolTip:'description', width: '10%' },
 			{ field: 'subProcessNm',   displayName: 'Sub Process Name',   sortable: false, toolTip:'description', width: '20%'  },
-			{ field: 'participant',    displayName: 'Application',        sortable: false, toolTip:'description', width: '20%'  },
-			{ field: 'dataEntity',     displayName: 'Data Entites',       sortable: false, toolTip:'description', width: '10%'  },
-			{ field: 'crud',           displayName: 'C R U D',            sortable: false, toolTip:'description', width: '10%'  },
+            { field: 'dataEntity',     displayName: 'Data Entites',       sortable: false, toolTip:'description', width: '10%'  },
+            { field: 'crud',           displayName: 'C R U D',            sortable: false, toolTip:'description', width: '3%'  },
+			{ field: 'application',    displayName: 'Application',        sortable: false, toolTip:'description', width: '20%'  },
+            { field: 'participant',    displayName: 'Participant',        sortable: false, toolTip:'description', width: '20%'  }
         ],
         enablePinning: false,
         enableSorting: false,
