@@ -23,6 +23,10 @@ import com.scottrade.datagovernance.dao.DataEntityDAO;
 import com.scottrade.datagovernance.domain.DataEntity;
 import com.scottrade.datagovernance.exception.NotFoundException;
 
+/**
+ * @author rnandakumar
+ *
+ */
 @Repository
 public class DataEntityDAOImpl implements DataEntityDAO {
 
@@ -36,6 +40,9 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 	}
 
+	/**
+	 * Method to retrive all Data Entities.
+	 */
 	public List<DataEntity> getAll() {
 		List<DataEntity> list = jdbcTemplate
 			.query("SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm asc",
@@ -47,23 +54,27 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		}
 	}
 
-	public List<DataEntity> getDependents(int id) {
-		List<DataEntity> list = jdbcTemplate.query(
-			"SELECT * FROM data_entity_master dem"
-				+ ", data_entity_dependency ded "
-				+ "WHERE dem.entity_id = ded.data_entity_child_id "
-				+ "  AND ded.data_entity_parent_id = :id",
-			new DataEntityRowMapper());
+	/**
+	 * Method to retrieve all Sub Entities for a given Entity.
+	 */
+	public List<Integer> getDependents(int id) {
+		List<Integer> list = null; 
+				//jdbcTemplate.queryForList(
+			//"SELECT data_entity_child_id FROM data_entity_dependency where data_entity_parent_id = :id");
 
 		if (list.isEmpty()) {
-			throw new NotFoundException(
-				"NO dependent entities found for Data Entity! entityId == "
-						+ id);
+//			throw new NotFoundException(
+//				"NO dependent entities found for Data Entity! entityId == "
+//						+ id);
 		} else {
 			return list;
 		}
+		return list;
 	}
 
+	/**
+	 * Method to retrieve a Data Entity.
+	 */
 	public DataEntity getById(int id) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", id);
@@ -80,6 +91,9 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		}
 	}
 
+	/**
+	 * Method to insert a new Data Entity.
+	 */
 	public void insertDataEntity(DataEntity dataEntity) {
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -95,6 +109,9 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		dataEntity.setEntityId(newId);
 	}
 
+	/**
+	 * Method to update a given Data Entity with the data supplied.
+	 */
 	public void updateDataEntity(DataEntity dataEntity) {
 		int numRowsAffected = jdbcTemplate.update(
 			"UPDATE data_entity_master"
@@ -110,6 +127,9 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		}
 	}
 
+	/**
+	 * Method to delete a given Data Entity record.
+	 */
 	public void deleteDataEntity(int id) {
 		int deDependentsnumRowsAffected = jdbcTemplate.update(
 				"DELETE FROM data_entity_hierarchy"
@@ -128,6 +148,9 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		}
 	}
 
+	/**
+	 * Method to map each row of the resultset to a parameter in its destination class.
+	 */
 	private static class DataEntityRowMapper implements RowMapper<DataEntity> {
 		public DataEntity mapRow(ResultSet res, int rowNum) throws SQLException {
 			DataEntity de = new DataEntity();

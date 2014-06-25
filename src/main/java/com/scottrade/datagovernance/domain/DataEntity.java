@@ -1,6 +1,7 @@
 package com.scottrade.datagovernance.domain;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * The class that represents a Data Entity and its information.
@@ -15,6 +16,7 @@ public class DataEntity implements Serializable {
 	private String entityNm;
 	private String entityDefn;
 	private String entityExtUrl;
+	private List<Integer> subEntityIdList;
 
 	public DataEntity() {
 		super();
@@ -80,6 +82,20 @@ public class DataEntity implements Serializable {
 		this.entityExtUrl = entityExtUrl;
 	}
 
+	/**
+	 * @return the subEntityIdList
+	 */
+	public List<Integer> getSubEntityIdList() {
+		return subEntityIdList;
+	}
+
+	/**
+	 * @param subEntityIdList the subEntityIdList to set
+	 */
+	public void setSubEntityIdList(List<Integer> subEntityIdList) {
+		this.subEntityIdList = subEntityIdList;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -92,6 +108,7 @@ public class DataEntity implements Serializable {
 			+ ", entityNm=" + entityNm
 			+ ", entityDefn=" + entityDefn
 			+ ", entityExtUrl=" + entityExtUrl
+			+ ", subEntityIdList=" + subEntityIdList
 			+ "]";
 	}
 }

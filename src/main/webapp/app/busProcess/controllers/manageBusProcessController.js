@@ -1,9 +1,11 @@
-//BEGIN - Application Master Controller
-angular.module('angularDashboardApp').controller('ManageAppMasterController', function ($scope, $http, $rootScope, $timeout, $dialogs) {
+//BEGIN - Business Process Controller
+angular.module('angularDashboardApp').controller('ManageBusProcessController', function ($scope, $http, $rootScope, $timeout, $dialogs) {
     $scope.filterOptions = {
         filterText: ""
         //useExternalFilter: true
     };
+
+    $scope.totalServerItems = 0;
     $scope.pagingOptions = {
         pageSizes: [20, 40, 60],
         pageSize: 20,
@@ -24,7 +26,7 @@ angular.module('angularDashboardApp').controller('ManageAppMasterController', fu
             if (searchText) {
                 var ft = searchText.toLowerCase();
                 //$http.get('rest/appMaster/all/').success(function (largeLoad) {
-                $http.get('mockData/mockAppMaster.json').success(function (largeLoad) {
+                $http.get('mockData/mockBusProcess.json').success(function (largeLoad) {
                     data = largeLoad.filter(function(item) {
                         return JSON.stringify(item).toLowerCase().indexOf(ft) != -1;
                     });
@@ -32,7 +34,7 @@ angular.module('angularDashboardApp').controller('ManageAppMasterController', fu
                 });
             } else {
                 //$http.get('rest/appMaster/all/').success(function (largeLoad) {
-                $http.get('mockData/mockAppMaster.json').success(function (largeLoad) {
+                $http.get('mockData/mockBusProcess.json').success(function (largeLoad) {
                     $scope.setPagingData(largeLoad, page, pageSize);
                 });
             }
@@ -63,7 +65,7 @@ angular.module('angularDashboardApp').controller('ManageAppMasterController', fu
 
     $scope.gridOptions = {
         data: 'myData',
-        plugins: [new ngGridFlexibleHeightPlugin()],
+        plugins: [new ngGridFlexibleHeightPlugin(), new ngGridCsvExportPlugin()],
         showGroupPanel: true,
         footerRowHeight: 5,
         columnDefs: [
@@ -73,28 +75,23 @@ angular.module('angularDashboardApp').controller('ManageAppMasterController', fu
                 pinnable: false,
                 sortable: false,
                 width: '7%', //2 not included to avoid horizontal scrollbar
-                cellTemplate: 'app/appMaster/pages/templates/appMasterActions.html'
+                cellTemplate: 'app/busProcess/pages/templates/busProcessActions.html'
             },
-			{ field: 'applNm',                   displayName: 'Name',             sortable: true,  toolTip:'description', width: '15%' },
-			{ field: 'applDsc',                  displayName: 'Description',      sortable: false, toolTip:'description', width: '50%' },
-            { field: 'propsdBAOdeptNm',          displayName: 'Bus. App Owner',   sortable: false, toolTip:'description', width: '15%' },
-            { field: 'propsdITAOdeptNm',         displayName: 'IT App. Owner',    sortable: false, toolTip:'description', width: '15%' },
-			{ field: 'applRbacControlledFlg',    displayName: 'RBAC',             sortable: false, toolTip:'description', width: '4%'  },
-			{ field: 'applHasBpsInBlueworksFlg', displayName: 'Blueworks',        sortable: false, toolTip:'description', width: '4%'  },
-			{ field: 'developedBy',              displayName: 'Developed by',     sortable: false, toolTip:'description', width: '5%'  },
-			{ field: 'hostedAt',                 displayName: 'Hosted At',        sortable: false, toolTip:'description', width: '5%'  },
-			{ field: 'authenticationMode',       displayName: 'Authenticated by', sortable: false, toolTip:'description', width: '6%%' },
-			{ field: 'authorizedBy',             displayName: 'Authorised by',    sortable: false, toolTip:'description', width: '8%' },
-			{ field: 'vendorNm',                 displayName: 'Vendor',           sortable: false, toolTip:'description', width: '6%' },
-			{ field: 'drBcDsc',                  displayName: 'DR/BC',            sortable: false, toolTip:'description', width: '6%' },
-			{ field: 'containsCustInfoFlg',      displayName: 'Customer Data',    sortable: false, toolTip:'description', width: '5%'  },
-            { field: 'applTierId',               displayName: 'Tier',             sortable: false, toolTip:'description', width: '2%'  }
+			{ field: 'bpNm',           displayName: 'Business Process',   sortable: true,  toolTip:'description', width: '15%' },
+			{ field: 'busOwnerNm',     displayName: 'Bus. Process Owner', sortable: false, toolTip:'description', width: '10%' },
+            { field: 'busOwnerTitle',  displayName: 'Owner Title',        sortable: false, toolTip:'description', width: '10%' },
+            { field: 'busOwnerDeptNm', displayName: 'Department',         sortable: false, toolTip:'description', width: '10%' },
+			{ field: 'subProcessNm',   displayName: 'Sub Process Name',   sortable: false, toolTip:'description', width: '20%'  },
+			{ field: 'participant',    displayName: 'Application',        sortable: false, toolTip:'description', width: '20%'  },
+			{ field: 'dataEntity',     displayName: 'Data Entites',       sortable: false, toolTip:'description', width: '10%'  },
+			{ field: 'crud',           displayName: 'C R U D',            sortable: false, toolTip:'description', width: '10%'  },
         ],
         enablePinning: false,
         enableSorting: false,
         enablePaging: true,
         //enableRowSelection: true,
         showFooter: true,
+        totalServerItems: 'totalServerItems',
         showColumnMenu: false,
         showFilter: false,
         headerRowHeight: 50,
@@ -135,4 +132,4 @@ angular.module('angularDashboardApp').controller('ManageAppMasterController', fu
     	 );
      };
  });
-// END   - Application Master Controller
+// END   - Business Process Controller

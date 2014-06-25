@@ -1,4 +1,49 @@
+<style>
+.page-header {
+  margin: 10px 0px 30px 0px;
+}
+.page-header h1 {
+  text-align: center;
+  color: #a095bd;
+  font-family:"trebuchet ms";
+}
+</style>
 
-<div ng-controller="DashboardController">
-    <nvd3 options='options' data='data'></nvd3>
+<div class="page-header">
+	<h1>The Numbers</h1>
+</div>
+
+
+<div class="content">
+	<div class="container container-fluid thumbnails" style="padding-top: 30px; width: 100%">
+	    <div class="row">
+	        <ul style="list-style-type: none; padding: 0px 10px 0px 10px;">
+	            <!-- ngRepeat: key in utils.keys(params.charts) track by key -->
+	            <li class="col-xs-6 col-md-3">
+	  	        	<div style="background: rgba(167, 165, 213, 0.439216);" ng-controller="DashboardController">
+    					<nvd3 options='options' data='data'></nvd3>
+					</div>
+	            </li>
+	            <!-- end ngRepeat: key in utils.keys(params.charts) track by key -->
+	            <li class="col-xs-6 col-md-3">
+	  	        	<div style="background: rgba(167, 165, 213, 0.439216);" ng-controller="DashboardDataEntityPieCtrl1">
+    					<nvd3 options='options' data='data'></nvd3>
+					</div>
+	            </li>
+	            <!-- end ngRepeat: key in utils.keys(params.charts) track by key -->
+	            <li class="col-xs-6 col-md-3">
+	  	        	<div style="background: rgba(167, 165, 213, 0.439216);" ng-controller="donutChartCtrl">
+    					<nvd3 options='options' data='data'></nvd3>
+					</div>
+	            </li>
+	            <!-- end ngRepeat: key in utils.keys(params.charts) track by key -->
+	            <li class="col-xs-6 col-md-3">
+	  	        	<div style="background: rgba(167, 165, 213, 0.439216);" ng-controller="DashboardDataEntityPieCtrl2">
+    					<nvd3 options='options' data='data'></nvd3>
+					</div>
+	            </li>
+	            <!-- end ngRepeat: key in utils.keys(params.charts) track by key -->
+	        </ul>
+	    </div>
+	</div>
 </div>

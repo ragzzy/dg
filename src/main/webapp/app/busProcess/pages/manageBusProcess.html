@@ -1,16 +1,14 @@
-
-
 <div class="page-container horizontal-menu"> <!-- add class -> with-sidebar to have left column -->
     <!-- NO Side bar for this page hence removed the above class -->
     <!--Main content-->
     <div class="main-content stretch-vertical">
-        <div ng-controller="ManageAppMasterController" class="pam">
+        <div ng-controller="ManageBusProcessController" class="pam">
             <!-- CONTROLLER -->
             <div>
                 <button ng-click="addApplication()"
                         type="button"
                         class="btn btn-primary">
-                    <span class="glyphicon glyphicon-plus"></span>&nbsp;Add Application
+                    <span class="glyphicon glyphicon-plus"></span>&nbsp;Add Business Process
                 </button>
                 <div class="search-box pull-right">
                     <input type="text" name="q" class="search-input" placeholder="Search..." ng-model="filterOptions.filterText" ng-change="search()" />

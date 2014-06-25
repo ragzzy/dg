@@ -15,6 +15,7 @@ var angularDashboardApp = angular.module('angularDashboardApp',
         'ui.bootstrap',
         //'ng-custom-template',
         'ngTable',
+        'ngGrid',
         'ngRoute',
         'rcForm',
         'autoFocusInput',
@@ -51,6 +52,12 @@ angularDashboardApp.config(function($routeProvider) {
         //home dashboard
         .when('/home', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
 
+        // Departments / Positions
+        .when('/deptPostionsEmployees', { templateUrl: 'app/departments/pages/deptPositionsEmployees.html', controller: 'DeptPositionsEmployeesController' })
+
+        // Business Processes
+        .when('/busProcess', { templateUrl: 'app/busProcess/pages/manageBusProcess.html', controller: 'ManageBusProcessController' })
+
         // Data Entity
         .when('/dataEntity', { templateUrl: 'app/dataEntity/pages/manageDataEntity.html', controller: 'ManageDataEntityController' })
         // ADD Entity
@@ -64,12 +71,17 @@ angularDashboardApp.config(function($routeProvider) {
         .when('/collectBusinessPrcs/:dptId', { templateUrl: 'pages/collectBusinessPrcs.html', controller: 'CollectBusinessPrcsController' })
         // Dashboard
         .when('/dashboard', { templateUrl: 'pages/dashboard.html', controller: 'DashboardController' })
+        // policies
+        .when('/policies', { templateUrl: 'pages/policies.html', controller: 'sampleManageController' })
+
+        //applications
+        .when('/applications', { templateUrl: 'app/appMaster/pages/manageAppMaster.html', controller: 'ManageAppMasterController' })
+
         //glossary
         .when('/glossary', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
         //dictionary
         .when('/dictionary', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
-        //applications
-        .when('/applications', { templateUrl: 'pages/manageAppMaster.html', controller: 'ManageAppMasterController' })
+
         //manage-users
         .when('/manage-users', { templateUrl: 'pages/manage-temp.html', controller: 'sampleManageController' })
         //manage-user-roles
@@ -102,7 +114,8 @@ angularDashboardApp.controller('mainController', function ($scope, dataEntitySta
        ,{ linkname: 'Dashboard', linkIcon: 'dashboard', linkUrl: '#dashboard' , subLinks: [] }
        ,{ linkname: 'Policies', linkIcon: 'anchor', linkUrl: '#policies', subLinks: [] }
        ,{ linkname: 'Glossary', linkIcon: 'globe', linkUrl: '#glossary', subLinks: [] }
-       ,{ linkname: 'Dictionary', linkIcon: 'book', linkUrl: '#dictionary', subLinks: [] }
+       ,{ linkname: 'Processes', linkIcon: 'book', linkUrl: '#busProcess', subLinks: [] }
+       ,{ linkname: 'Deparments', linkIcon: 'book', linkUrl: '#deptPostionsEmployees', subLinks: [] }
        ,{ linkname: 'Entity', linkIcon: 'key', linkUrl: '#dataEntity', subLinks: [] }
        ,{ linkname: 'Applications', linkIcon: 'briefcase', linkUrl: '#applications', subLinks: [] }
        ,{

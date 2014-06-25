@@ -2,7 +2,7 @@ angular.module('angularDashboardApp').controller('DashboardController', function
 	$scope.options = {
         chart: {
             type: 'discreteBarChart',
-            height: 450,
+            height: 500,
             margin : {
                 top: 20,
                 right: 20,
@@ -13,30 +13,35 @@ angular.module('angularDashboardApp').controller('DashboardController', function
             y: function(d){ return d.value; },
             showValues: true,
             valueFormat: function(d){
-                return d3.format(',.4f')(d);
+                return d3.format(',')(d);
             },
             transitionDuration: 500,
             xAxis: {
-                axisLabel: 'X Axis'
+                axisLabel: 'Data Entities',
+                rotateLabels: -20
             },
             yAxis: {
-                axisLabel: 'Y Axis',
+                axisLabel: 'Application usage %',
                 axisLabelDistance: 30
             }
+        },
+        title: {
+            enable: true,
+            text: '% Usage in Applcations'
         }
     };
 
 	$scope.data = [{
         key: "Cumulative Return",
         values: [
-            { "label" : "A" , "value" : -29.765957771107 },
-            { "label" : "B" , "value" : 0 },
-            { "label" : "C" , "value" : 32.807804682612 },
-            { "label" : "D" , "value" : 196.45946739256 },
-            { "label" : "E" , "value" : 0.19434030906893 },
-            { "label" : "F" , "value" : -98.079782601442 },
-            { "label" : "G" , "value" : -13.925743130903 },
-            { "label" : "H" , "value" : -5.1387322875705 }
+            { "label" : "Account Coding" , "value" : 29 },
+            { "label" : "Employee" , "value" : 10 },
+            { "label" : "Customer" , "value" : 90 },
+            { "label" : "Trading" , "value" : 50 },
+            { "label" : "Revenue" , "value" : 4 },
+            { "label" : "CRM" , "value" : 32 },
+            { "label" : "HR" , "value" : 13 },
+            { "label" : "Legal" , "value" : 5 }
         ]
     }];
 });

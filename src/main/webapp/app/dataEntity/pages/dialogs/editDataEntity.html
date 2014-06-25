@@ -26,7 +26,7 @@
                 <input type="text" class="form-control" name="entityExtRefUrl" id="entityExtRefUrl" data-ng-model="entityExtRefUrl" data-ng-keyup="hitEnter($event)" required>
             </div>
             <div class="form-group">
-                <label ng-repeat="fruit in fruits" class="checkbox-inline">
+                <label ng-repeat="de in allDEs | filter:selectedEntityFilter" class="checkbox-inline">
                 <!--
                 - use `value="{{fruit.name}}"` to give the input a real value, in case the form gets submitted
                 traditionally
