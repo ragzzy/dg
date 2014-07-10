@@ -1,8 +1,8 @@
 //BEGIN - Department, Positions, Employees Controller
 angular.module('angularDashboardApp').controller('DeptPositionsEmployeesController', function ($scope, $http, $rootScope, $timeout, $dialogs) {
     $scope.filterOptions = {
-        filterText: ""
-        //useExternalFilter: true
+        filterText: "",
+        useExternalFilter: true
     };
 
     $scope.filterEntity = function() {

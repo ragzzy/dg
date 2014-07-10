@@ -102,11 +102,15 @@ angularDashboardApp.config(function($routeProvider) {
 // =================================================================================================================================== //
 // MAIN ADMIN WHOLISTIC controller
 // =================================================================================================================================== //
-angularDashboardApp.controller('mainController', function ($scope, dataEntityStateSvc) {
+angularDashboardApp.controller('mainController', function ($scope, dataEntityStateSvc, departmentPositionsDataSvc, appMasterSvc) {
 
     // // // preloads \\ \\ \\
     // data entities.
     dataEntityStateSvc.query();
+    // application master
+    appMasterSvc.query();
+    // department master
+    departmentPositionsDataSvc.query();
 
     //header banner links
     $scope.headerLinks = [

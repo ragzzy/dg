@@ -1,8 +1,8 @@
 //BEGIN - Business Process Controller
 angular.module('angularDashboardApp').controller('ManageBusProcessController', function ($scope, $http, $rootScope, $timeout, $dialogs) {
     $scope.filterOptions = {
-        filterText: ""
-        //useExternalFilter: true
+        filterText: "",
+        useExternalFilter: true
     };
 
     $scope.totalServerItems = 0;
@@ -57,6 +57,7 @@ angular.module('angularDashboardApp').controller('ManageBusProcessController', f
             $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
         }
     }, true);
+
     $scope.$watch('filterOptions', function (newVal, oldVal) {
         if (newVal !== oldVal) {
             $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
@@ -74,7 +75,7 @@ angular.module('angularDashboardApp').controller('ManageBusProcessController', f
                 groupable: false,
                 pinnable: false,
                 sortable: false,
-                width: '7%', //2 not included to avoid horizontal scrollbar
+                width: '7%',
                 cellTemplate: 'app/busProcess/pages/templates/busProcessActions.html'
             },
 			{ field: 'bpNm',           displayName: 'Business Process',   sortable: true,  toolTip:'description', width: '15%' },
@@ -87,7 +88,7 @@ angular.module('angularDashboardApp').controller('ManageBusProcessController', f
 			{ field: 'application',    displayName: 'Application',        sortable: false, toolTip:'description', width: '20%'  },
             { field: 'participant',    displayName: 'Participant',        sortable: false, toolTip:'description', width: '20%'  }
         ],
-        enablePinning: false,
+        enablePinning: true,
         enableSorting: false,
         enablePaging: true,
         //enableRowSelection: true,

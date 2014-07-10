@@ -1,9 +1,11 @@
 //BEGIN - Application Master Controller
 angular.module('angularDashboardApp').controller('ManageAppMasterController', function ($scope, $http, $rootScope, $timeout, $dialogs) {
     $scope.filterOptions = {
-        filterText: ""
-        //useExternalFilter: true
+        filterText: "",
+        useExternalFilter: true
     };
+
+    $scope.totalServerItems = 0;
     $scope.pagingOptions = {
         pageSizes: [20, 40, 60],
         pageSize: 20,
@@ -72,7 +74,7 @@ angular.module('angularDashboardApp').controller('ManageAppMasterController', fu
                 groupable: false,
                 pinnable: false,
                 sortable: false,
-                width: '7%', //2 not included to avoid horizontal scrollbar
+                width: '7%',
                 cellTemplate: 'app/appMaster/pages/templates/appMasterActions.html'
             },
 			{ field: 'applNm',                   displayName: 'Name',             sortable: true,  toolTip:'description', width: '15%' },
@@ -100,6 +102,7 @@ angular.module('angularDashboardApp').controller('ManageAppMasterController', fu
         headerRowHeight: 50,
         enableColumnResize: true,
         enableHighlighting: true,
+        totalServerItems: 'totalServerItems',
         pagingOptions: $scope.pagingOptions,
         filterOptions: $scope.filterOptions,
         jqueryUITheme: true,

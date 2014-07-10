@@ -16,7 +16,8 @@ public class DataEntity implements Serializable {
 	private String entityNm;
 	private String entityDefn;
 	private String entityExtUrl;
-	private List<Integer> subEntityIdList;
+	private boolean selected;
+	private List<DataEntity> subEntityIdList;
 
 	public DataEntity() {
 		super();
@@ -82,18 +83,33 @@ public class DataEntity implements Serializable {
 		this.entityExtUrl = entityExtUrl;
 	}
 
+
 	/**
 	 * @return the subEntityIdList
 	 */
-	public List<Integer> getSubEntityIdList() {
+	public List<DataEntity> getSubEntityIdList() {
 		return subEntityIdList;
 	}
 
 	/**
 	 * @param subEntityIdList the subEntityIdList to set
 	 */
-	public void setSubEntityIdList(List<Integer> subEntityIdList) {
+	public void setSubEntityIdList(List<DataEntity> subEntityIdList) {
 		this.subEntityIdList = subEntityIdList;
+	}
+
+	/**
+	 * @return the selected
+	 */
+	public boolean isSelected() {
+		return selected;
+	}
+
+	/**
+	 * @param selected the selected to set
+	 */
+	public void setSelected(boolean selected) {
+		this.selected = selected;
 	}
 
 	/*
@@ -109,6 +125,7 @@ public class DataEntity implements Serializable {
 			+ ", entityDefn=" + entityDefn
 			+ ", entityExtUrl=" + entityExtUrl
 			+ ", subEntityIdList=" + subEntityIdList
+			+ ", selected=" + selected
 			+ "]";
 	}
 }

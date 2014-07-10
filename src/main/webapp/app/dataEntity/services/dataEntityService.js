@@ -2,7 +2,7 @@ angular.module('angularDashboardApp').factory('dataEntityStateSvc', function ($h
 	var allDEs = {};
     var URL = 'mockData/mockDataEntity.json';
 //    var URL = 'rest/dataEntity/all/';
-	$log.log("hihihihihihihihihhihihihih in the service");
+	$log.log("hihihihihihihihihhihihihih loading Data Entities as startup singleton service");
     var factory = {
 		query: function () {
 			var data = $http({method: 'GET', url: URL}).then(

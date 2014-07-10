@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- define angular app -->
-<html data-ng-app="angularDashboardApp" lang="en">
+<html xmlns:ng="http://angularjs.org" id="ng-app" ng-app="angularDashboardApp" lang="en">
     <head>
         <!--Meta-->
         <meta charset="utf-8"/>
@@ -36,6 +36,19 @@
         <!--[if lt IE 9]>
             <script src="assets/js/html5shiv.js"></script>
             <script src="assets/js/respond.min.js"></script>
+        <![endif]-->
+
+        <!--[if lte IE 8]>
+            <script>
+                document.createElement('ng-include');
+                document.createElement('ng-pluralize');
+                document.createElement('ng-view');
+
+                // Optionally these for CSS
+                document.createElement('ng:include');
+                document.createElement('ng:pluralize');
+                document.createElement('ng:view');
+            </script>
         <![endif]-->
     </head>
     <!-- define angular controller -->
