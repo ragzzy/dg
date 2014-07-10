@@ -61,7 +61,7 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 		List<Integer> list =  
 			jdbcTemplate.query(
 					"SELECT data_entity_child_id FROM data_entity_dependency where data_entity_parent_id = :id",
-					new Mapper()
+					new IntMapper()
 					);
 
 		if (list.isEmpty()) {
@@ -161,6 +161,12 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 			de.setEntityDefn(res.getString("entity_defn"));
 			de.setEntityExtUrl(res.getString("entity_ext_url_ref"));
 			return de;
+		}
+	}
+
+	private static class IntMapper implements RowMapper<Integer> {
+		public Integer mapRow(ResultSet res, int rowNum) throws SQLException {
+			
 		}
 	}
 }
