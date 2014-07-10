@@ -58,9 +58,11 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 	 * Method to retrieve all Sub Entities for a given Entity.
 	 */
 	public List<Integer> getDependents(int id) {
-		List<Integer> list = null; 
-				//jdbcTemplate.queryForList(
-			//"SELECT data_entity_child_id FROM data_entity_dependency where data_entity_parent_id = :id");
+		List<Integer> list =  
+			jdbcTemplate.query(
+					"SELECT data_entity_child_id FROM data_entity_dependency where data_entity_parent_id = :id",
+					new Mapper()
+					);
 
 		if (list.isEmpty()) {
 //			throw new NotFoundException(
