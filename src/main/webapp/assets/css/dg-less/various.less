@@ -45,3 +45,89 @@
         }
     }
 }
+
+
+//variables
+@one-pixel: 1px;
+@ln-ht-ft: 1.333;
+
+
+.flexi-layout{
+    //this should always be the first child after a relative position item   - preferably main content
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    @header-ht: 60;
+
+    .flexi-header{
+        height: @header-ht * @one-pixel;
+        width: 100%;
+        position: absolute;
+        border-bottom: 1px solid #eee;
+
+        .title{
+            text-transform: uppercase;
+            line-height: @header-ht * @one-pixel;
+            color: #272727;        
+            font-weight: 700;
+        }
+
+        .actions{
+            margin-top: 12px;
+            margin-right: 400px;
+
+            .search-box{
+                min-width: 100px !important;
+                width: 150px !important;
+            }
+        }
+
+        &:after{
+            clear: both;
+        }
+    }
+
+    .flexi-content{
+        padding: 0;
+        top: @header-ht * @one-pixel;
+        position: absolute;
+        height: 100%;
+        width: 100%;        
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding-bottom: 80px;
+
+
+        .ngGrid {
+            background-color: #fdfdfd;
+            height: 100% !important;
+            width: 100%;
+            min-height: 50px !important;
+            color: #272727;
+            margin:0 !important;
+            position: relative !important;
+
+
+            .ngFooterPanel {
+                background-color: transparent;
+                padding: 0;
+                border: none;
+                position: absolute;
+                height: 45px;
+                top: -50px;
+                
+            }
+
+            .ngTotalSelectContainer{                
+                position: absolute;
+                right: 0;
+                top: 50px;
+            }
+
+           
+        }
+    }
+}

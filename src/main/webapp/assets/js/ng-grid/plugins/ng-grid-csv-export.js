@@ -71,16 +71,9 @@ function ngGridCsvExportPlugin (opts) {
                 csvDataLinkPrevious.remove() ;
             }
 
-            /*
-            var csvDataLinkHtml = "<span class=\"csv-data-link-span\">";
-            csvDataLinkHtml += "<br><a href=\"data:text/csv;charset=UTF-8,";
+            var csvDataLinkHtml = "<a class=\"pull-right csv-data-link-span btn btn-link\" href=\"data:text/csv;charset=UTF-8,";
             csvDataLinkHtml += encodeURIComponent(csvData);
-            csvDataLinkHtml += "\" download=\"Export.csv\">CSV</a></br></span>" ;
-            */
-
-            var csvDataLinkHtml = "<a style='float:right;margin:10px;' class=\"csv-data-link-span btn btn-primary\" href=\"data:text/csv;charset=UTF-8,";
-            csvDataLinkHtml += encodeURIComponent(csvData);
-            csvDataLinkHtml += "\" download=\"Export.csv\">Export to Excel</a>" ;
+            csvDataLinkHtml += "\" download=\"Export.csv\"><i class=\"fa fa-2x fa-file-excel-o\"></i></a>" ;
 
             fp.append(csvDataLinkHtml);
         }

@@ -2,17 +2,17 @@ angular.module('ng-custom-template', []).run(['$templateCache', function($templa
   'use strict';
 
   $templateCache.put('template/accordion/accordion-group.html',
-    "<div class=\"panel panel-default\"><div class=panel-heading><h4 class=panel-title><a class=accordion-toggle ng-click=toggleOpen() accordion-transclude=heading><span ng-class=\"{'text-muted': isDisabled}\">{{heading}}</span></a></h4></div><div class=panel-collapse collapse=!isOpen><div class=panel-body ng-transclude=\"\"></div></div></div>"
+    "<div class=\"panel panel-default\"><div class=panel-heading><h4 class=panel-title><a class=accordion-toggle ng-click=toggleOpen() accordion-transclude=heading><span ng-class=\"{'text-muted': isDisabled}\">{{heading}}</span></a></h4></div><div class=panel-collapse collapse=!isOpen><div class=panel-body ng-transclude></div></div></div>"
   );
 
 
   $templateCache.put('template/accordion/accordion.html',
-    "<div class=panel-group ng-transclude=\"\"></div>"
+    "<div class=panel-group ng-transclude></div>"
   );
 
 
   $templateCache.put('template/alert/alert.html',
-    "<div class=alert ng-class=\"['alert-' + (type || 'warning'), closeable ? 'alert-dismissable' : null]\" role=alert><button ng-show=closeable type=button class=close ng-click=close()><span aria-hidden=true>&times;</span> <span class=sr-only>Close</span></button><div ng-transclude=\"\"></div></div>"
+    "<div class=alert ng-class=\"['alert-' + (type || 'warning'), closeable ? 'alert-dismissable' : null]\" role=alert><button ng-show=closeable type=button class=close ng-click=close()><span aria-hidden=true>&times;</span> <span class=sr-only>Close</span></button><div ng-transclude></div></div>"
   );
 
 
@@ -32,7 +32,7 @@ angular.module('ng-custom-template', []).run(['$templateCache', function($templa
 
 
   $templateCache.put('template/datepicker/popup.html',
-    "<ul class=dropdown-menu ng-style=\"{display: (isOpen && 'block') || 'none', top: position.top+'px', left: position.left+'px'}\" ng-keydown=keydown($event)><li ng-transclude=\"\"></li><li ng-if=showButtonBar style=\"padding:10px 9px 2px\"><span class=btn-group><button type=button class=\"btn btn-sm btn-info\" ng-click=\"select('today')\">{{ getText('current') }}</button> <button type=button class=\"btn btn-sm btn-danger\" ng-click=select(null)>{{ getText('clear') }}</button></span> <button type=button class=\"btn btn-sm btn-success pull-right\" ng-click=close()>{{ getText('close') }}</button></li></ul>"
+    "<ul class=dropdown-menu ng-style=\"{display: (isOpen && 'block') || 'none', top: position.top+'px', left: position.left+'px'}\" ng-keydown=keydown($event)><li ng-transclude></li><li ng-if=showButtonBar style=\"padding:10px 9px 2px\"><span class=btn-group><button type=button class=\"btn btn-sm btn-info\" ng-click=\"select('today')\">{{ getText('current') }}</button> <button type=button class=\"btn btn-sm btn-danger\" ng-click=select(null)>{{ getText('clear') }}</button></span> <button type=button class=\"btn btn-sm btn-success pull-right\" ng-click=close()>{{ getText('close') }}</button></li></ul>"
   );
 
 
@@ -47,17 +47,17 @@ angular.module('ng-custom-template', []).run(['$templateCache', function($templa
 
 
   $templateCache.put('template/modal/window.html',
-    "<div tabindex=-1 role=dialog class=\"modal fade\" ng-class=\"{in: animate}\" ng-style=\"{'z-index': 1050 + index*10, display: 'block'}\" ng-click=close($event)><div class=modal-dialog ng-class=\"{'modal-sm': size == 'sm', 'modal-lg': size == 'lg'}\"><div class=modal-content modal-transclude=\"\"></div></div></div>"
+    "<div tabindex=-1 role=dialog class=\"modal fade\" ng-class=\"{in: animate}\" ng-style=\"{'z-index': 1050 + index*10, display: 'block'}\" ng-click=close($event)><div class=modal-dialog ng-class=\"{'modal-sm': size == 'sm', 'modal-lg': size == 'lg'}\"><div class=modal-content modal-transclude></div></div></div>"
   );
 
 
   $templateCache.put('template/pagination/pager.html',
-    "<ul class=pager><li ng-class=\"{disabled: noPrevious(), previous: align}\"><a href=\"\" ng-click=\"selectPage(page - 1)\">{{getText('previous')}}</a></li><li ng-class=\"{disabled: noNext(), next: align}\"><a href=\"\" ng-click=\"selectPage(page + 1)\">{{getText('next')}}</a></li></ul>"
+    "<ul class=pager><li ng-class=\"{disabled: noPrevious(), previous: align}\"><a href ng-click=\"selectPage(page - 1)\">{{getText('previous')}}</a></li><li ng-class=\"{disabled: noNext(), next: align}\"><a href ng-click=\"selectPage(page + 1)\">{{getText('next')}}</a></li></ul>"
   );
 
 
   $templateCache.put('template/pagination/pagination.html',
-    "<ul class=pagination><li ng-if=boundaryLinks ng-class=\"{disabled: noPrevious()}\"><a href=\"\" ng-click=selectPage(1)>{{getText('first')}}</a></li><li ng-if=directionLinks ng-class=\"{disabled: noPrevious()}\"><a href=\"\" ng-click=\"selectPage(page - 1)\">{{getText('previous')}}</a></li><li ng-repeat=\"page in pages track by $index\" ng-class=\"{active: page.active}\"><a href=\"\" ng-click=selectPage(page.number)>{{page.text}}</a></li><li ng-if=directionLinks ng-class=\"{disabled: noNext()}\"><a href=\"\" ng-click=\"selectPage(page + 1)\">{{getText('next')}}</a></li><li ng-if=boundaryLinks ng-class=\"{disabled: noNext()}\"><a href=\"\" ng-click=selectPage(totalPages)>{{getText('last')}}</a></li></ul>"
+    "<ul class=pagination><li ng-if=boundaryLinks ng-class=\"{disabled: noPrevious()}\"><a href ng-click=selectPage(1)>{{getText('first')}}</a></li><li ng-if=directionLinks ng-class=\"{disabled: noPrevious()}\"><a href ng-click=\"selectPage(page - 1)\">{{getText('previous')}}</a></li><li ng-repeat=\"page in pages track by $index\" ng-class=\"{active: page.active}\"><a href ng-click=selectPage(page.number)>{{page.text}}</a></li><li ng-if=directionLinks ng-class=\"{disabled: noNext()}\"><a href ng-click=\"selectPage(page + 1)\">{{getText('next')}}</a></li><li ng-if=boundaryLinks ng-class=\"{disabled: noNext()}\"><a href ng-click=selectPage(totalPages)>{{getText('last')}}</a></li></ul>"
   );
 
 
@@ -67,27 +67,27 @@ angular.module('ng-custom-template', []).run(['$templateCache', function($templa
 
 
   $templateCache.put('template/progressbar/bar.html',
-    "<div class=progress-bar ng-class=\"type && 'progress-bar-' + type\" role=progressbar aria-valuenow={{value}} aria-valuemin=0 aria-valuemax={{max}} ng-style=\"{width: percent + '%'}\" aria-valuetext=\"{{percent | number:0}}%\" ng-transclude=\"\"></div>"
+    "<div class=progress-bar ng-class=\"type && 'progress-bar-' + type\" role=progressbar aria-valuenow={{value}} aria-valuemin=0 aria-valuemax={{max}} ng-style=\"{width: percent + '%'}\" aria-valuetext=\"{{percent | number:0}}%\" ng-transclude></div>"
   );
 
 
   $templateCache.put('template/progressbar/progress.html',
-    "<div class=progress ng-transclude=\"\"></div>"
+    "<div class=progress ng-transclude></div>"
   );
 
 
   $templateCache.put('template/progressbar/progressbar.html',
-    "<div class=progress><div class=progress-bar ng-class=\"type && 'progress-bar-' + type\" role=progressbar aria-valuenow={{value}} aria-valuemin=0 aria-valuemax={{max}} ng-style=\"{width: percent + '%'}\" aria-valuetext=\"{{percent | number:0}}%\" ng-transclude=\"\"></div></div>"
+    "<div class=progress><div class=progress-bar ng-class=\"type && 'progress-bar-' + type\" role=progressbar aria-valuenow={{value}} aria-valuemin=0 aria-valuemax={{max}} ng-style=\"{width: percent + '%'}\" aria-valuetext=\"{{percent | number:0}}%\" ng-transclude></div></div>"
   );
 
 
   $templateCache.put('template/tabs/tab.html',
-    "<li ng-class=\"{active: active, disabled: disabled}\"><a ng-click=select() tab-heading-transclude=\"\">{{heading}}</a></li>"
+    "<li ng-class=\"{active: active, disabled: disabled}\"><a ng-click=select() tab-heading-transclude>{{heading}}</a></li>"
   );
 
 
   $templateCache.put('template/tabs/tabset.html',
-    "<div><ul class=\"nav nav-{{type || 'tabs'}}\" ng-class=\"{'nav-stacked': vertical, 'nav-justified': justified}\" ng-transclude=\"\"></ul><div class=tab-content><div class=tab-pane ng-repeat=\"tab in tabs\" ng-class=\"{active: tab.active}\" tab-content-transclude=tab></div></div></div>"
+    "<div><ul class=\"nav nav-{{type || 'tabs'}}\" ng-class=\"{'nav-stacked': vertical, 'nav-justified': justified}\" ng-transclude></ul><div class=tab-content><div class=tab-pane ng-repeat=\"tab in tabs\" ng-class=\"{active: tab.active}\" tab-content-transclude=tab></div></div></div>"
   );
 
 
@@ -112,7 +112,7 @@ angular.module('ng-custom-template', []).run(['$templateCache', function($templa
 
 
   $templateCache.put('template/typeahead/typeahead-popup.html',
-    "<ul class=dropdown-menu ng-if=isOpen() ng-style=\"{top: position.top+'px', left: position.left+'px'}\" style=\"display: block\" role=listbox aria-hidden={{!isOpen()}}><li ng-repeat=\"match in matches track by $index\" ng-class=\"{active: isActive($index) }\" ng-mouseenter=selectActive($index) ng-click=selectMatch($index) role=option id={{match.id}}><div typeahead-match=\"\" index=$index match=match query=query template-url=templateUrl></div></li></ul>"
+    "<ul class=dropdown-menu ng-if=isOpen() ng-style=\"{top: position.top+'px', left: position.left+'px'}\" style=\"display: block\" role=listbox aria-hidden={{!isOpen()}}><li ng-repeat=\"match in matches track by $index\" ng-class=\"{active: isActive($index) }\" ng-mouseenter=selectActive($index) ng-click=selectMatch($index) role=option id={{match.id}}><div typeahead-match index=$index match=match query=query template-url=templateUrl></div></li></ul>"
   );
 
 }]);
