@@ -2,29 +2,39 @@
     <!-- NO Side bar for this page hence removed the above class -->
     <!--Main content-->
     <div class="main-content stretch-vertical">
-        <div ng-controller="DeptPositionsEmployeesController" class="pam">
-            <div class="background: rgba(48, 48, 68, 0.439216);font-family:"trebuchet ms";text-align: center;color: #f9c702;">The Departments, Employee positions listing</div>
-            <!-- CONTROLLER -->
-            <div>
-                <button ng-click="uploadAdpHrData()"
+
+        <div class="flexi-layout" ng-controller="DeptPositionsEmployeesController">
+
+            <div class="flexi-header">
+
+                <div class="title pull-left">
+                    The Departments, Employee positions listing
+                </div>           
+
+                <div class="pull-right actions">
+
+                    <button 
+                        ng-click="uploadAdpHrData()"
                         type="button"
-                        class="btn btn-primary">
-                    <span class="glyphicon glyphicon-plus"></span>&nbsp;Upload latest HR/ADP Data
-                </button>
-                <div class="search-box pull-right">
-                    <input type="text" name="q" class="search-input" placeholder="Search..." ng-model="filterOptions.filterText" ng-change="search()" />
-                    <button type="submit">
-                        <i class="entypo-search"></i>
+                        class="btn btn-link pull-right">
+                        <span class="fa fa-2x fa-upload"></span>
                     </button>
+                    <div class="search-box pull-right">
+                        <input type="text" name="q" class="search-input" placeholder="Search..." ng-model="filterOptions.filterText" ng-change="search()" />
+                        <button type="submit">
+                            <i class="entypo-search"></i>
+                        </button>
+                    </div>
+
+                </div>
+                <div class="clearfix">
                 </div>
             </div>
-            <div class="clearfix"></div>
-            <hr />
-            <div class="grid-default"
-                 ng-grid="gridOptions">
+            <div class="flexi-content"> <!-- flexi content assumes that it nests the grid and does cascading styles in the less -->
+                <div ng-grid="gridOptions" class="grid-default"></div>
             </div>
         </div>
-        <!-- Ends Controller -->
+       
     </div>
     
     <!--this is weird as ng handles reference from global scope-->

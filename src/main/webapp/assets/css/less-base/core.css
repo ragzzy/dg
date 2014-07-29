@@ -20410,3 +20410,65 @@ body .horizontal-menu header.navbar > ul > li#search .search-input:-ms-input-pla
 .search-box button i {
   margin: 0;
 }
+.flexi-layout {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.flexi-layout .flexi-header {
+  height: 60px;
+  width: 100%;
+  position: absolute;
+  border-bottom: 1px solid #eee;
+}
+.flexi-layout .flexi-header .title {
+  text-transform: uppercase;
+  line-height: 60px;
+  color: #272727;
+  font-weight: 700;
+}
+.flexi-layout .flexi-header .actions {
+  margin-top: 12px;
+  margin-right: 400px;
+}
+.flexi-layout .flexi-header .actions .search-box {
+  min-width: 100px !important;
+  width: 150px !important;
+}
+.flexi-layout .flexi-header:after {
+  clear: both;
+}
+.flexi-layout .flexi-content {
+  padding: 0;
+  top: 60px;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding-bottom: 80px;
+}
+.flexi-layout .flexi-content .ngGrid {
+  background-color: #fdfdfd;
+  height: 100% !important;
+  width: 100%;
+  min-height: 50px !important;
+  color: #272727;
+  margin: 0 !important;
+  position: relative !important;
+}
+.flexi-layout .flexi-content .ngGrid .ngFooterPanel {
+  background-color: transparent;
+  padding: 0;
+  border: none;
+  position: absolute;
+  height: 45px;
+  top: -50px;
+}
+.flexi-layout .flexi-content .ngGrid .ngTotalSelectContainer {
+  position: absolute;
+  right: 0;
+  top: 50px;
+}

@@ -3,8 +3,7 @@
 // =================================================================================================================================== //
 // PREPARING ALL THE DIRECTIVES FOR DEP INJECTION INTO THE MAIN APP MODULE
 // =================================================================================================================================== //
-angular.module('rcForm', []).directive(rcSubmitDirective);
-angular.module('autoFocusInput', []).directive(autoFocusInputDirective);
+//angular.module('autoFocusInput', []).directive(autoFocusInputDirective);
 
 // =================================================================================================================================== //
 // ANGULAR APP MODULE
@@ -17,8 +16,6 @@ var angularDashboardApp = angular.module('angularDashboardApp',
         'ngTable',
         'ngGrid',
         'ngRoute',
-        'rcForm',
-        'autoFocusInput',
         'dialogs',
         'ui.select2',
         'nvd3'
