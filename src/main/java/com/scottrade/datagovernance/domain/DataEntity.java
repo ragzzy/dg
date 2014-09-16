@@ -16,11 +16,25 @@ public class DataEntity implements Serializable {
 	private String entityNm;
 	private String entityDefn;
 	private String entityExtUrl;
+	private String entityExampleTxt;
 	private boolean selected;
 	private List<DataEntity> subEntityIdList;
 
+	/**
+	 * Default constructor.
+	 */
 	public DataEntity() {
 		super();
+	}
+	
+	/**
+	 * Overloaded to set on initialization
+	 */
+	public DataEntity(String nm, String dsc, String ex) {
+		super();
+		setEntityNm(nm);
+		setEntityDefn(dsc);
+		setEntityExampleTxt(ex);
 	}
 
 	/**
@@ -112,6 +126,20 @@ public class DataEntity implements Serializable {
 		this.selected = selected;
 	}
 
+	/**
+	 * @return the entityExampleTxt
+	 */
+	public String getEntityExampleTxt() {
+		return entityExampleTxt;
+	}
+
+	/**
+	 * @param entityExampleTxt the entityExampleTxt to set
+	 */
+	public void setEntityExampleTxt(String entityExampleTxt) {
+		this.entityExampleTxt = entityExampleTxt;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -124,6 +152,7 @@ public class DataEntity implements Serializable {
 			+ ", entityNm=" + entityNm
 			+ ", entityDefn=" + entityDefn
 			+ ", entityExtUrl=" + entityExtUrl
+			+ ", entityExampleTxt=" + entityExampleTxt
 			+ ", subEntityIdList=" + subEntityIdList
 			+ ", selected=" + selected
 			+ "]";

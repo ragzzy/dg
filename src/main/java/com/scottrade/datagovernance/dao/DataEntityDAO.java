@@ -12,7 +12,7 @@ import com.scottrade.datagovernance.domain.DataEntity;
 public interface DataEntityDAO {
 
 	List<DataEntity> getAll();
-	List<Integer> getDependents(int id);
+	List<DataEntity> getDependents(int id);
 
 	/**
 	 * Selects the Data Entity record with the given id.

@@ -44,33 +44,38 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 	 * Method to retrive all Data Entities.
 	 */
 	public List<DataEntity> getAll() {
-		List<DataEntity> list = jdbcTemplate
-			.query("SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm asc",
-					new DataEntityRowMapper());
-		if (list.isEmpty()) {
+		String sqlStrAllDEs = "SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm ASC";
+		String sqlStrAllDeDependents = "SELECT * FROM data_entity_master WHERE entity_id > 0 ORDER BY entity_nm ASC";
+		List<DataEntity> allDElist = jdbcTemplate.query(sqlStrAllDEs, new DataEntityRowMapper());
+		List<DataEntity> allDEDependentslist = jdbcTemplate.query(sqlStrAllDeDependents, new DataEntityRowMapper());
+		
+		if (allDElist.isEmpty()) {
 			throw new NotFoundException("NO data entities found!");
 		} else {
-			return list;
+			return allDElist;
 		}
 	}
 
 	/**
 	 * Method to retrieve all Sub Entities for a given Entity.
 	 */
-	public List<Integer> getDependents(int id) {
-		List<Integer> list =  
-			jdbcTemplate.query(
-					"SELECT data_entity_child_id FROM data_entity_dependency where data_entity_parent_id = :id",
-					new IntMapper()
-					);
+	public List<DataEntity> getDependents(int id) {
+		String sqlStr = 
+			  "SELECT dem.entity_id"
+			+ "      ,dem.entity_nm"
+			+ "      ,''"
+			+ "      ,''"
+			+ "  FROM data_entity_master dem, data_entity_dependency ded"
+			+ " WHERE ded.data_entity_parent_id = :id"
+			+ "   AND dem.entity_id = ded.data_entity_child_id";
+
+		List<DataEntity> list =  
+			jdbcTemplate.query(sqlStr, new DataEntityRowMapper());
 
 		if (list.isEmpty()) {
-//			throw new NotFoundException(
-//				"NO dependent entities found for Data Entity! entityId == "
-//						+ id);
-		} else {
-			return list;
+			logger.debug("No dependent entities found for the Data Entity! entityId == " + id);
 		}
+
 		return list;
 	}
 
@@ -161,12 +166,6 @@ public class DataEntityDAOImpl implements DataEntityDAO {
 			de.setEntityDefn(res.getString("entity_defn"));
 			de.setEntityExtUrl(res.getString("entity_ext_url_ref"));
 			return de;
-		}
-	}
-
-	private static class IntMapper implements RowMapper<Integer> {
-		public Integer mapRow(ResultSet res, int rowNum) throws SQLException {
-			
 		}
 	}
 }

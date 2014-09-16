@@ -12,6 +12,8 @@ public class ApplicationMaster implements Serializable {
 	private static final long serialVersionUID = -1L;
 
 	private int applId;
+	private String appInDOscope;
+	private String appInRBACscope;
 	private String applNm;
 	private String applDsc;
 	private int applTierId;
@@ -37,6 +39,13 @@ public class ApplicationMaster implements Serializable {
 	public ApplicationMaster() {
 		super();
 	}
+	
+	public ApplicationMaster(String inAppNm, String inAppDesc, String inAppInDOscope, String inAppInRBACscope) {
+		this.applNm = inAppNm;
+		this.applDsc = inAppDesc;
+		this.appInDOscope = inAppInDOscope;
+		this.appInRBACscope = inAppInRBACscope;
+	}
 
 	/**
 	 * @return the applId
@@ -50,6 +59,34 @@ public class ApplicationMaster implements Serializable {
 	 */
 	public void setApplId(int applId) {
 		this.applId = applId;
+	}
+
+	/**
+	 * @return the appInDOscope
+	 */
+	public String getAppInDOscope() {
+		return appInDOscope;
+	}
+
+	/**
+	 * @param appInDOscope the appInDOscope to set
+	 */
+	public void setAppInDOscope(String appInDOscope) {
+		this.appInDOscope = appInDOscope;
+	}
+
+	/**
+	 * @return the appInRBACscope
+	 */
+	public String getAppInRBACscope() {
+		return appInRBACscope;
+	}
+
+	/**
+	 * @param appInRBACscope the appInRBACscope to set
+	 */
+	public void setAppInRBACscope(String appInRBACscope) {
+		this.appInRBACscope = appInRBACscope;
 	}
 
 	/**
@@ -78,6 +115,34 @@ public class ApplicationMaster implements Serializable {
 	 */
 	public void setApplDsc(String applDsc) {
 		this.applDsc = applDsc;
+	}
+
+	/**
+	 * @return the applTierId
+	 */
+	public int getApplTierId() {
+		return applTierId;
+	}
+
+	/**
+	 * @param applTierId the applTierId to set
+	 */
+	public void setApplTierId(int applTierId) {
+		this.applTierId = applTierId;
+	}
+
+	/**
+	 * @return the applTierPolicyDefnTxt
+	 */
+	public String getApplTierPolicyDefnTxt() {
+		return applTierPolicyDefnTxt;
+	}
+
+	/**
+	 * @param applTierPolicyDefnTxt the applTierPolicyDefnTxt to set
+	 */
+	public void setApplTierPolicyDefnTxt(String applTierPolicyDefnTxt) {
+		this.applTierPolicyDefnTxt = applTierPolicyDefnTxt;
 	}
 
 	/**
@@ -318,62 +383,27 @@ public class ApplicationMaster implements Serializable {
 		this.containsCustInfoFlg = containsCustInfoFlg;
 	}
 
-	/**
-	 * @return the applTierId
-	 */
-	public int getApplTierId() {
-		return applTierId;
-	}
-
-	/**
-	 * @param applTierId the applTierId to set
-	 */
-	public void setApplTierId(int applTierId) {
-		this.applTierId = applTierId;
-	}
-
-	/**
-	 * @return the applTierPolicyDefnTxt
-	 */
-	public String getApplTierPolicyDefnTxt() {
-		return applTierPolicyDefnTxt;
-	}
-
-	/**
-	 * @param applTierPolicyDefnTxt the applTierPolicyDefnTxt to set
-	 */
-	public void setApplTierPolicyDefnTxt(String applTierPolicyDefnTxt) {
-		this.applTierPolicyDefnTxt = applTierPolicyDefnTxt;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "ApplicationMaster [getApplId()=" + getApplId()
-				+ ", getApplNm()=" + getApplNm() + ", getApplDsc()="
-				+ getApplDsc() + ", getApplRbacControlledFlg()="
-				+ getApplRbacControlledFlg()
-				+ ", getApplHasBpsInBlueworksFlg()="
-				+ getApplHasBpsInBlueworksFlg() + ", getApplLiveFlg()="
-				+ getApplLiveFlg() + ", getApplDecommDate()="
-				+ getApplDecommDate() + ", getDevelopedBy()="
-				+ getDevelopedBy() + ", getHostedAt()=" + getHostedAt()
-				+ ", getAuthenticationMode()=" + getAuthenticationMode()
-				+ ", getAuthorizedBy()=" + getAuthorizedBy()
-				+ ", getVendorNm()=" + getVendorNm()
-				+ ", getPropsdBAOdeptId()=" + getPropsdBAOdeptId()
-				+ ", getPropsdBAOdeptNm()=" + getPropsdBAOdeptNm()
-				+ ", getPropsdBAOtitle()=" + getPropsdBAOtitle()
-				+ ", getPropsdITAOdeptId()=" + getPropsdITAOdeptId()
-				+ ", getPropsdITAOdeptNm()=" + getPropsdITAOdeptNm()
-				+ ", getDrbcId()=" + getDrbcId() + ", getDrBcDsc()="
-				+ getDrBcDsc() + ", getContainsCustInfoFlg()="
-				+ getContainsCustInfoFlg() + ", getApplTierId()="
-				+ getApplTierId() + ", getApplTierPolicyDefnTxt()="
-				+ getApplTierPolicyDefnTxt() + "]";
+		return "ApplicationMaster [applId=" + applId + ", appInDOscope="
+				+ appInDOscope + ", appInRBACscope=" + appInRBACscope
+				+ ", applNm=" + applNm + ", applDsc=" + applDsc
+				+ ", applTierId=" + applTierId + ", applTierPolicyDefnTxt="
+				+ applTierPolicyDefnTxt + ", applRbacControlledFlg="
+				+ applRbacControlledFlg + ", applHasBpsInBlueworksFlg="
+				+ applHasBpsInBlueworksFlg + ", applLiveFlg=" + applLiveFlg
+				+ ", applDecommDate=" + applDecommDate + ", developedBy="
+				+ developedBy + ", hostedAt=" + hostedAt
+				+ ", authenticationMode=" + authenticationMode
+				+ ", authorizedBy=" + authorizedBy + ", vendorNm=" + vendorNm
+				+ ", propsdBAOdeptId=" + propsdBAOdeptId + ", propsdBAOdeptNm="
+				+ propsdBAOdeptNm + ", propsdBAOtitle=" + propsdBAOtitle
+				+ ", propsdITAOdeptId=" + propsdITAOdeptId
+				+ ", propsdITAOdeptNm=" + propsdITAOdeptNm + ", drbcId="
+				+ drbcId + ", drBcDsc=" + drBcDsc + ", containsCustInfoFlg="
+				+ containsCustInfoFlg + "]";
 	}
-
-
 }
