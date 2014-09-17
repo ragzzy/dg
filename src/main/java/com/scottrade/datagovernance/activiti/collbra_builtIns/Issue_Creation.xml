@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <collaboration id="Collaboration">
+    <participant id="pool1" name="Log New Data Issue" processRef="issueCreation"></participant>
+  </collaboration>
+  <process id="issueCreation" name="Issue Creation" isExecutable="true">
+    <documentation>This process takes care of creating new issues and placing them in the correct responsible community. Any user can start this workflow and needs to fill in a list of required and optional parameters for the issue to be created.</documentation>
+    <laneSet id="laneSet_issueCreation">
+      <lane id="lane1">
+        <flowNodeRef>endevent1</flowNodeRef>
+        <flowNodeRef>createIssue</flowNodeRef>
+        <flowNodeRef>startevent1</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="startevent1" name="Start" activiti:initiator="requester" activiti:formKey="Log_Issue">
+      <extensionElements>
+        <activiti:formProperty id="subject" name="Title" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="description" name="Description" type="textarea" required="true"></activiti:formProperty>
+        <activiti:formProperty id="priority" name="Priority" type="enum" default="Normal">
+          <activiti:value id="Blocking" name="Blocking"></activiti:value>
+          <activiti:value id="Critical" name="Critical"></activiti:value>
+          <activiti:value id="Urgent" name="Urgent"></activiti:value>
+          <activiti:value id="Normal" name="Normal"></activiti:value>
+          <activiti:value id="Minor" name="Minor"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="responsibleCommunity" name="Responsible Community" type="community" default="${communityComponent.getCommunityByUri('http://www.collibra.com/data_governance_council_community').getId()}">
+          <activiti:value id="defaultFromResource" name="true"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="relations" name="Relevant Assets" type="term">
+          <activiti:value id="multiValue" name="true"></activiti:value>
+          <activiti:value id="conceptType" name="00000000-0000-0000-0000-000000031000"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="classifications" name="Issue Classification" type="term">
+          <activiti:value id="proposedFixed" name="true"></activiti:value>
+          <activiti:value id="multiValue" name="true"></activiti:value>
+          <activiti:value id="proposedValues" name="00000000-0000-0000-0000-000000008001,00000000-0000-0000-0000-000000008002,00000000-0000-0000-0000-000000008003,00000000-0000-0000-0000-000000008004,00000000-0000-0000-0000-000000008005,00000000-0000-0000-0000-000000008006,00000000-0000-0000-0000-000000008007,00000000-0000-0000-0000-000000008008,00000000-0000-0000-0000-000000008009,00000000-0000-0000-0000-000000008010,00000000-0000-0000-0000-000000008011,00000000-0000-0000-0000-000000008012,00000000-0000-0000-0000-000000008013,00000000-0000-0000-0000-000000008014"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="submit" name="Create Issue" type="button" default="false"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <serviceTask id="createIssue" name="Create Issue" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.CreateIssue">
+      <extensionElements>
+        <activiti:field name="subject">
+          <activiti:expression>${subject}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="description">
+          <activiti:expression>${description}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="priority">
+          <activiti:expression>${priority}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="relations">
+          <activiti:expression>${relations}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="classifications">
+          <activiti:expression>${classifications}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="requester">
+          <activiti:expression>${requester}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="responsibleCommunity">
+          <activiti:expression>${responsibleCommunity}</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow3" sourceRef="createIssue" targetRef="endevent1"></sequenceFlow>
+    <sequenceFlow id="flow4" sourceRef="startevent1" targetRef="createIssue"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collaboration">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration" id="BPMNPlane_Collaboration">
+      <bpmndi:BPMNShape bpmnElement="pool1" id="BPMNShape_pool1">
+        <omgdc:Bounds height="150.0" width="500.0" x="10.0" y="10.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane1" id="BPMNShape_lane1">
+        <omgdc:Bounds height="150.0" width="480.0" x="30.0" y="10.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="70.0" y="70.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="420.0" y="70.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="createIssue" id="BPMNShape_createIssue">
+        <omgdc:Bounds height="55.0" width="105.0" x="210.0" y="60.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="315.0" y="87.0"></omgdi:waypoint>
+        <omgdi:waypoint x="342.0" y="87.0"></omgdi:waypoint>
+        <omgdi:waypoint x="420.0" y="87.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="105.0" y="87.0"></omgdi:waypoint>
+        <omgdi:waypoint x="210.0" y="87.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

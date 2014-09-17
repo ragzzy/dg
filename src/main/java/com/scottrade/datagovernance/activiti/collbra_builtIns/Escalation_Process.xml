@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <signal id="WORKFLOW_TASK_COMPLETED" name="WORKFLOW_TASK_COMPLETED"></signal>
+  <collaboration id="Collaboration">
+    <participant id="pool1" name="Escalation Process" processRef="escalationProcess"></participant>
+  </collaboration>
+  <process id="escalationProcess" name="Escalation Process" isExecutable="true">
+    <documentation>This process will trigger when a task escalates. A task will escalate when the task exceeds it's due date. Depending on the escalation type of the task, this escalation process will perform different logic. 
+
+Two escalation types are currently implemented:
+
+1) mail: in a first step, the user(s) assigned to the task will be notified that his task is about to expire and he/they will be urged to perform the task as soon as possible. In a second step, after a configured time duration, the configured responsibles are notified that the user(s) exceeded the due date for their task and they can perform necessary actions.
+2) reassign: The configured user(s) will recieve a task asking to reassign the escalated task
+
+This process will end automatically when the original task would be completed in the meantime.</documentation>
+    <laneSet id="laneSet_escalationProcess">
+      <lane id="lane1">
+        <flowNodeRef>startevent1</flowNodeRef>
+        <flowNodeRef>startevent2</flowNodeRef>
+        <flowNodeRef>subprocess1</flowNodeRef>
+        <flowNodeRef>endevent5</flowNodeRef>
+        <flowNodeRef>servicetask2</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="startevent1" name="Start">
+      <extensionElements>
+        <activiti:formProperty id="mailToUserExpression" name="Users to notify in case of 'mail' escalation" type="string" default="role(Steward)" readable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="reassignTaskUserExpression" name="User Expression for users recieving the 'reassign task' in case of escalation type 'reassign'" type="string" default="role(Steward)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="mailNotifyDuration" name="Time duration before the responsibles are notified of escalation" type="string" default="B1D" readable="false"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <serviceTask id="servicetask2" name="Save Escalating Task Id" activiti:expression="${event.taskId}" activiti:resultVariableName="escalationTaskId"></serviceTask>
+    <subProcess id="subprocess1" name="Escalate">
+      <exclusiveGateway id="exclusivegateway2" name="Exclusive Gateway"></exclusiveGateway>
+      <endEvent id="endevent6" name="ErrorEnd">
+        <errorEventDefinition errorRef="myError"></errorEventDefinition>
+      </endEvent>
+      <endEvent id="endevent7" name="End"></endEvent>
+      <subProcess id="subprocess2" name="Escalation Sub Process">
+        <startEvent id="startevent2" name="Start"></startEvent>
+        <serviceTask id="servicetask1" name="Remind candidates of escalation" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+          <extensionElements>
+            <activiti:field name="template">
+              <activiti:string><![CDATA[workflow-escalation-reminder]]></activiti:string>
+            </activiti:field>
+            <activiti:field name="mailToUsers">
+              <activiti:expression>${event.taskCandidateUsers}</activiti:expression>
+            </activiti:field>
+          </extensionElements>
+        </serviceTask>
+        <endEvent id="endevent1" name="End"></endEvent>
+        <serviceTask id="servicetask3" name="Notify responsibles" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+          <extensionElements>
+            <activiti:field name="mailTo">
+              <activiti:expression>${mailToUserExpression}</activiti:expression>
+            </activiti:field>
+            <activiti:field name="template">
+              <activiti:string><![CDATA[workflow-escalation-notify]]></activiti:string>
+            </activiti:field>
+          </extensionElements>
+        </serviceTask>
+        <userTask id="reassign_task" name="Reassign Task" activiti:candidateUsers="${reassignTaskUserExpression}">
+          <documentation>Please reassign the escalated task: '${event.taskId}' in process '${event.workflowDefinition.signifier}' with candidate users: '${event.taskCandidateUsers} 'and key: '${event.taskKey}'</documentation>
+        </userTask>
+        <sequenceFlow id="flow7" sourceRef="reassign_task" targetRef="endevent1"></sequenceFlow>
+        <exclusiveGateway id="exclusivegateway3" name="Exclusive Gateway"></exclusiveGateway>
+        <sequenceFlow id="flow24" sourceRef="startevent2" targetRef="exclusivegateway3"></sequenceFlow>
+        <sequenceFlow id="flow5" name="default" sourceRef="exclusivegateway3" targetRef="servicetask1">
+          <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!'reassign'.equals(event.escalationType)}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow6" name="reassign" sourceRef="exclusivegateway3" targetRef="reassign_task">
+          <conditionExpression xsi:type="tFormalExpression"><![CDATA[${'reassign'.equals(event.escalationType)}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow20" sourceRef="servicetask3" targetRef="endevent1"></sequenceFlow>
+        <intermediateCatchEvent id="timerintermediatecatchevent1" name="TimerCatchEvent">
+          <timerEventDefinition>
+            <timeDuration>${mailNotifyDuration}</timeDuration>
+          </timerEventDefinition>
+        </intermediateCatchEvent>
+        <sequenceFlow id="flow25" sourceRef="servicetask1" targetRef="timerintermediatecatchevent1"></sequenceFlow>
+        <sequenceFlow id="flow26" sourceRef="timerintermediatecatchevent1" targetRef="servicetask3"></sequenceFlow>
+      </subProcess>
+      <boundaryEvent id="boundarysignal1" attachedToRef="subprocess2" cancelActivity="false">
+        <signalEventDefinition signalRef="WORKFLOW_TASK_COMPLETED"></signalEventDefinition>
+      </boundaryEvent>
+      <sequenceFlow id="flow9" name="escalated task completed" sourceRef="exclusivegateway2" targetRef="endevent6">
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${escalationTaskId.equals(event.getTaskId())}]]></conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="flow17" name="other task escalated" sourceRef="exclusivegateway2" targetRef="endevent7">
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!escalationTaskId.equals(event.getTaskId())}]]></conditionExpression>
+      </sequenceFlow>
+      <startEvent id="startevent3" name="Start"></startEvent>
+      <endEvent id="endevent8" name="End"></endEvent>
+      <sequenceFlow id="flow21" sourceRef="startevent3" targetRef="subprocess2"></sequenceFlow>
+      <sequenceFlow id="flow22" sourceRef="boundarysignal1" targetRef="exclusivegateway2"></sequenceFlow>
+      <sequenceFlow id="flow23" sourceRef="subprocess2" targetRef="endevent8"></sequenceFlow>
+    </subProcess>
+    <boundaryEvent id="boundaryerror1" name="boundaryerror1" attachedToRef="subprocess1">
+      <errorEventDefinition errorRef="myError"></errorEventDefinition>
+    </boundaryEvent>
+    <endEvent id="endevent5" name="End"></endEvent>
+    <sequenceFlow id="flow11" sourceRef="startevent1" targetRef="servicetask2"></sequenceFlow>
+    <sequenceFlow id="flow13" sourceRef="subprocess1" targetRef="endevent5"></sequenceFlow>
+    <sequenceFlow id="flow15" sourceRef="servicetask2" targetRef="subprocess1"></sequenceFlow>
+    <sequenceFlow id="flow14" sourceRef="boundaryerror1" targetRef="endevent5"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collaboration">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration" id="BPMNPlane_Collaboration">
+      <bpmndi:BPMNShape bpmnElement="pool1" id="BPMNShape_pool1">
+        <omgdc:Bounds height="531.0" width="1221.0" x="0.0" y="30.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane1" id="BPMNShape_lane1">
+        <omgdc:Bounds height="531.0" width="1201.0" x="20.0" y="30.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="30.0" y="314.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask2" id="BPMNShape_servicetask2">
+        <omgdc:Bounds height="81.0" width="105.0" x="120.0" y="291.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="subprocess1" id="BPMNShape_subprocess1">
+        <omgdc:Bounds height="418.0" width="691.0" x="300.0" y="123.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway2" id="BPMNShape_exclusivegateway2">
+        <omgdc:Bounds height="40.0" width="40.0" x="530.0" y="424.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent6" id="BPMNShape_endevent6">
+        <omgdc:Bounds height="35.0" width="35.0" x="730.0" y="427.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent7" id="BPMNShape_endevent7">
+        <omgdc:Bounds height="35.0" width="35.0" x="730.0" y="500.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="subprocess2" id="BPMNShape_subprocess2">
+        <omgdc:Bounds height="205.0" width="521.0" x="380.0" y="160.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent2" id="BPMNShape_startevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="404.0" y="247.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="68.0" width="121.0" x="530.0" y="180.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="805.0" y="300.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask3" id="BPMNShape_servicetask3">
+        <omgdc:Bounds height="65.0" width="115.0" x="765.0" y="181.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="reassign_task" id="BPMNShape_reassign_task">
+        <omgdc:Bounds height="67.0" width="105.0" x="610.0" y="284.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway3" id="BPMNShape_exclusivegateway3">
+        <omgdc:Bounds height="40.0" width="40.0" x="460.0" y="244.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="timerintermediatecatchevent1" id="BPMNShape_timerintermediatecatchevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="690.0" y="196.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarysignal1" id="BPMNShape_boundarysignal1">
+        <omgdc:Bounds height="30.0" width="30.0" x="500.0" y="350.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent3" id="BPMNShape_startevent3">
+        <omgdc:Bounds height="35.0" width="35.0" x="320.0" y="245.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent8" id="BPMNShape_endevent8">
+        <omgdc:Bounds height="35.0" width="35.0" x="940.0" y="245.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundaryerror1" id="BPMNShape_boundaryerror1">
+        <omgdc:Bounds height="30.0" width="30.0" x="977.0" y="450.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent5" id="BPMNShape_endevent5">
+        <omgdc:Bounds height="35.0" width="35.0" x="1040.0" y="314.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="715.0" y="317.0"></omgdi:waypoint>
+        <omgdi:waypoint x="805.0" y="317.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
+        <omgdi:waypoint x="439.0" y="264.0"></omgdi:waypoint>
+        <omgdi:waypoint x="460.0" y="264.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="480.0" y="244.0"></omgdi:waypoint>
+        <omgdi:waypoint x="480.0" y="213.0"></omgdi:waypoint>
+        <omgdi:waypoint x="530.0" y="214.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="32.0" x="840.0" y="359.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="480.0" y="284.0"></omgdi:waypoint>
+        <omgdi:waypoint x="480.0" y="317.0"></omgdi:waypoint>
+        <omgdi:waypoint x="610.0" y="317.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="42.0" x="850.0" y="459.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow20" id="BPMNEdge_flow20">
+        <omgdi:waypoint x="822.0" y="246.0"></omgdi:waypoint>
+        <omgdi:waypoint x="822.0" y="300.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow25" id="BPMNEdge_flow25">
+        <omgdi:waypoint x="651.0" y="214.0"></omgdi:waypoint>
+        <omgdi:waypoint x="690.0" y="213.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow26" id="BPMNEdge_flow26">
+        <omgdi:waypoint x="725.0" y="213.0"></omgdi:waypoint>
+        <omgdi:waypoint x="765.0" y="213.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+        <omgdi:waypoint x="570.0" y="444.0"></omgdi:waypoint>
+        <omgdi:waypoint x="730.0" y="444.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="36.0" width="100.0" x="870.0" y="528.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow17" id="BPMNEdge_flow17">
+        <omgdi:waypoint x="550.0" y="464.0"></omgdi:waypoint>
+        <omgdi:waypoint x="549.0" y="517.0"></omgdi:waypoint>
+        <omgdi:waypoint x="730.0" y="517.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="99.0" x="840.0" y="625.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow21" id="BPMNEdge_flow21">
+        <omgdi:waypoint x="355.0" y="262.0"></omgdi:waypoint>
+        <omgdi:waypoint x="380.0" y="262.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow22" id="BPMNEdge_flow22">
+        <omgdi:waypoint x="515.0" y="380.0"></omgdi:waypoint>
+        <omgdi:waypoint x="514.0" y="442.0"></omgdi:waypoint>
+        <omgdi:waypoint x="530.0" y="444.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow23" id="BPMNEdge_flow23">
+        <omgdi:waypoint x="901.0" y="262.0"></omgdi:waypoint>
+        <omgdi:waypoint x="940.0" y="262.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
+        <omgdi:waypoint x="65.0" y="331.0"></omgdi:waypoint>
+        <omgdi:waypoint x="120.0" y="331.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
+        <omgdi:waypoint x="991.0" y="332.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1040.0" y="331.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow15" id="BPMNEdge_flow15">
+        <omgdi:waypoint x="225.0" y="331.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="332.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
+        <omgdi:waypoint x="1007.0" y="465.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1057.0" y="464.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1057.0" y="349.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

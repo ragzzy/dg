@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <collaboration id="Collaboration">
+    <participant id="pool1" name="Approval Process" processRef="approvalProcess"></participant>
+  </collaboration>
+  <process id="approvalProcess" name="Approval Process" isExecutable="true">
+    <documentation>This is the main approval process for terms. 
+
+The subject matter expert starts by reviewing the definition. 
+After that the stakeholders are given an opportunity to provide comments on the given term. The subject matter expert is then given a task to process the comments and the stewards are asked to vote for term aproval. The stakeholders are notified of the final outcome.</documentation>
+    <laneSet id="laneSet_approvalProcess">
+      <lane id="lane1" name="Start User">
+        <flowNodeRef>startevent1</flowNodeRef>
+        <flowNodeRef>endevent3</flowNodeRef>
+        <flowNodeRef>servicetask4</flowNodeRef>
+        <flowNodeRef>servicetask5</flowNodeRef>
+        <flowNodeRef>correct_definition</flowNodeRef>
+        <flowNodeRef>correct_definition</flowNodeRef>
+      </lane>
+      <lane id="lane2" name="Subject Matter Expert">
+        <flowNodeRef>exclusivegateway2</flowNodeRef>
+        <flowNodeRef>address_comments</flowNodeRef>
+        <flowNodeRef>servicetask2</flowNodeRef>
+        <flowNodeRef>callactivity2</flowNodeRef>
+      </lane>
+      <lane id="lane3" name="Stakeholder">
+        <flowNodeRef>mailTask2</flowNodeRef>
+        <flowNodeRef>mailTask1</flowNodeRef>
+        <flowNodeRef>subprocess1</flowNodeRef>
+      </lane>
+      <lane id="lane4" name="Steward">
+        <flowNodeRef>exclusivegateway1</flowNodeRef>
+        <flowNodeRef>servicetask3</flowNodeRef>
+        <flowNodeRef>callactivity1</flowNodeRef>
+      </lane>
+    </laneSet>
+    <serviceTask id="servicetask2" name="Mark as &quot;Under Review&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005020]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>
+    <serviceTask id="servicetask3" name="Mark as &quot;Accepted&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005009]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <callActivity id="callactivity1" name="Vote For Approval" calledElement="votingSubProcess">
+      <extensionElements>
+        <activiti:in sourceExpression="${&quot;Please vote for the approval of the definition. If you want to reject, please provide a reason for doing so.&quot;}" target="decisionInfo"></activiti:in>
+        <activiti:in source="stewardUserExpression" target="voterUserExpression"></activiti:in>
+        <activiti:in source="voteCompletionPercentage" target="votePercentage"></activiti:in>
+        <activiti:in sourceExpression="${true}" target="addComments"></activiti:in>
+        <activiti:in sourceExpression="${true}" target="earlyComplete"></activiti:in>
+        <activiti:in source="voteWarningTimeDuration" target="voteWarningTimeDuration"></activiti:in>
+        <activiti:in source="voteTimeoutDuration" target="voteTimeoutDuration"></activiti:in>
+        <activiti:in sourceExpression="${&quot;Approve/Reject&quot;}" target="voteButtonLabel"></activiti:in>
+        <activiti:in sourceExpression="${&quot;Approve&quot;}" target="voteTaskName"></activiti:in>
+        <activiti:in source="sendVotingActionEmails" target="sendActionEmail"></activiti:in>
+        <activiti:out source="votingResult" target="votingResult"></activiti:out>
+      </extensionElements>
+    </callActivity>
+    <startEvent id="startevent1" name="Start" activiti:initiator="startUser">
+      <extensionElements>
+        <activiti:formProperty id="smeUserExpression" name="User expression for the &quot;Subject Matter Expert&quot; lane in the process" type="string" default="role(Subject Matter Expert)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="stakeholderUserExpression" name="User expression for the Stakeholder lane in the process" type="string" default="role(Stakeholder)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="stewardUserExpression" name="User expression for the Steward lane in the process" type="string" default="role(Steward)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="voteWarningTimeDuration" name="Please enter time duration before a voting reminder is send" type="string" default="B5D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="voteTimeoutDuration" name="Timeout before voting process is forced to continue" type="string" default="B7D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="voteCompletionPercentage" name="Percentage required to vote before completion" type="long" default="100" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="reviewWarningTimeDuration" name="Time duration before sending reminder in &quot;Review Definion&quot; task" type="string" default="B5D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="reviewTimeoutDuration" name="Time before review task is forced to continue" type="string" default="B7D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="reviewCompletionPercentage" name="Percentage of users for &quot;Review Definition&quot; that need to complete their task before continuing" type="long" default="100" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="commentTimeoutDuration" name="Time duration before the comment subprocess is ended" type="string" default="B5D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="sendVotingActionEmails" name="Send an action email to users that are required to vote in the process" type="boolean" default="false" readable="false" required="true"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <exclusiveGateway id="exclusivegateway2" name="Exclusive Gateway"></exclusiveGateway>
+    <callActivity id="callactivity2" name="Review Definition" calledElement="votingSubProcess">
+      <extensionElements>
+        <activiti:in sourceExpression="${'Please review the '}${item.getConceptTypeName()}${'.'}" target="decisionInfo"></activiti:in>
+        <activiti:in source="smeUserExpression" target="voterUserExpression"></activiti:in>
+        <activiti:in source="reviewCompletionPercentage" target="votePercentage"></activiti:in>
+        <activiti:in sourceExpression="${true}" target="addComments"></activiti:in>
+        <activiti:in sourceExpression="${true}" target="earlyComplete"></activiti:in>
+        <activiti:in source="reviewWarningTimeDuration" target="voteWarningTimeDuration"></activiti:in>
+        <activiti:in source="reviewTimeoutDuration" target="voteTimeoutDuration"></activiti:in>
+        <activiti:in sourceExpression="${&quot;Review&quot;}" target="voteButtonLabel"></activiti:in>
+        <activiti:in sourceExpression="${&quot;Review&quot;}" target="voteTaskName"></activiti:in>
+        <activiti:in source="activityFilter" target="activityFilter"></activiti:in>
+        <activiti:in source="sendVotingActionEmails" target="sendActionEmail"></activiti:in>
+        <activiti:out source="votingResult" target="votingResult"></activiti:out>
+        <activiti:executionListener event="start" class="com.collibra.dgc.core.workflow.activiti.listener.SetActivityStreamListener">
+          <activiti:field name="startOnStatusChangeFrom">
+            <activiti:string><![CDATA[Accepted]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="resourceTypes">
+            <activiti:string><![CDATA[AT]]></activiti:string>
+          </activiti:field>
+        </activiti:executionListener>
+      </extensionElements>
+    </callActivity>
+    <subProcess id="subprocess1" name="Comment">
+      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="${users.getUserNamesWithError(stakeholderUserExpression)}" activiti:elementVariable="currentStakeholder"></multiInstanceLoopCharacteristics>
+      <userTask id="comment_provide" name="Provide Comment" activiti:candidateUsers="user(${currentStakeholder})">
+        <documentation>Please provide comments.</documentation>
+        <extensionElements>
+          <activiti:formProperty id="comment" name="Comment" type="textarea" required="true"></activiti:formProperty>
+          <activiti:formProperty id="commentButton" name="Comment" type="taskButton"></activiti:formProperty>
+        </extensionElements>
+      </userTask>
+      <serviceTask id="servicetask1" name="Store comment" activiti:expression="${commentComponent.addComment(item.id, item.type, comment)}"></serviceTask>
+      <startEvent id="startevent2" name="Start"></startEvent>
+      <endEvent id="endevent2" name="End"></endEvent>
+      <sequenceFlow id="flow3" sourceRef="comment_provide" targetRef="servicetask1"></sequenceFlow>
+      <sequenceFlow id="flow30" sourceRef="startevent2" targetRef="comment_provide">
+        <extensionElements>
+          <activiti:executionListener event="take" class="com.collibra.dgc.core.workflow.activiti.extensions.executionlistener.CreateLocalVariable">
+            <activiti:field name="variableName">
+              <activiti:string><![CDATA[comment]]></activiti:string>
+            </activiti:field>
+          </activiti:executionListener>
+        </extensionElements>
+      </sequenceFlow>
+      <sequenceFlow id="flow31" sourceRef="servicetask1" targetRef="endevent2"></sequenceFlow>
+    </subProcess>
+    <boundaryEvent id="boundarytimer1" name="boundarytimer1" attachedToRef="subprocess1" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDuration>${commentTimeoutDuration}</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <userTask id="address_comments" name="Process Comments" activiti:candidateUsers="${smeUserExpression}">
+      <documentation>Please process the given comments.</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.listener.SetActivityStreamListener">
+          <activiti:field name="startTask">
+            <activiti:string><![CDATA[comment_provide]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="resourceTypes">
+            <activiti:string><![CDATA[CM]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow8" name="accepted" sourceRef="exclusivegateway1" targetRef="servicetask3">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${votingResult.votingResult}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow16" sourceRef="servicetask3" targetRef="mailTask1"></sequenceFlow>
+    <sequenceFlow id="flow20" sourceRef="callactivity1" targetRef="exclusivegateway1"></sequenceFlow>
+    <sequenceFlow id="flow22" name="rejected" sourceRef="exclusivegateway1" targetRef="mailTask2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!votingResult.votingResult}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow24" name="accepted" sourceRef="exclusivegateway2" targetRef="servicetask2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${votingResult.votingResult}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow25" name="rejected" sourceRef="exclusivegateway2" targetRef="correct_definition">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!votingResult.votingResult}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow26" sourceRef="startevent1" targetRef="callactivity2"></sequenceFlow>
+    <sequenceFlow id="flow27" sourceRef="callactivity2" targetRef="exclusivegateway2"></sequenceFlow>
+    <sequenceFlow id="flow21" sourceRef="address_comments" targetRef="callactivity1"></sequenceFlow>
+    <sequenceFlow id="flow32" sourceRef="servicetask2" targetRef="subprocess1"></sequenceFlow>
+    <sequenceFlow id="flow33" sourceRef="subprocess1" targetRef="address_comments"></sequenceFlow>
+    <sequenceFlow id="flow34" sourceRef="boundarytimer1" targetRef="address_comments"></sequenceFlow>
+    <serviceTask id="mailTask2" name="Notify Stakeholders" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+      <extensionElements>
+        <activiti:field name="template">
+          <activiti:string><![CDATA[rejected]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="mailTo">
+          <activiti:expression>${stakeholderUserExpression}</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="mailTask1" name="Notify Stakeholders" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+      <extensionElements>
+        <activiti:field name="template">
+          <activiti:string><![CDATA[approved]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="mailTo">
+          <activiti:expression>${stakeholderUserExpression}</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask4" name="Notify Start User" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+      <extensionElements>
+        <activiti:field name="template">
+          <activiti:string><![CDATA[approved]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="mailTo">
+          <activiti:expression>user(${startUser})</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow35" sourceRef="mailTask1" targetRef="servicetask4"></sequenceFlow>
+    <endEvent id="endevent3" name="End"></endEvent>
+    <sequenceFlow id="flow36" sourceRef="servicetask4" targetRef="endevent3"></sequenceFlow>
+    <serviceTask id="servicetask5" name="Notify Start User" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+      <extensionElements>
+        <activiti:field name="template">
+          <activiti:string><![CDATA[rejected]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="mailTo">
+          <activiti:expression>user(${startUser})</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow37" sourceRef="mailTask2" targetRef="servicetask5"></sequenceFlow>
+    <sequenceFlow id="flow38" sourceRef="servicetask5" targetRef="callactivity2"></sequenceFlow>
+    <userTask id="correct_definition" name="Rejected Definition" activiti:candidateUsers="user(${startUser})">
+      <documentation>Correct the definition after it was rejected by ${users.current}.</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.listener.SetActivityStreamListener">
+          <activiti:field name="resourceTypes">
+            <activiti:string><![CDATA[CM]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow28" sourceRef="correct_definition" targetRef="callactivity2"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collaboration">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration" id="BPMNPlane_Collaboration">
+      <bpmndi:BPMNShape bpmnElement="pool1" id="BPMNShape_pool1">
+        <omgdc:Bounds height="640.0" width="1371.0" x="30.0" y="20.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane1" id="BPMNShape_lane1">
+        <omgdc:Bounds height="150.0" width="1351.0" x="50.0" y="20.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane2" id="BPMNShape_lane2">
+        <omgdc:Bounds height="150.0" width="1351.0" x="50.0" y="170.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane3" id="BPMNShape_lane3">
+        <omgdc:Bounds height="150.0" width="1351.0" x="50.0" y="320.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane4" id="BPMNShape_lane4">
+        <omgdc:Bounds height="190.0" width="1351.0" x="50.0" y="470.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask2" id="BPMNShape_servicetask2">
+        <omgdc:Bounds height="55.0" width="141.0" x="410.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway1" id="BPMNShape_exclusivegateway1">
+        <omgdc:Bounds height="40.0" width="40.0" x="860.0" y="497.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask3" id="BPMNShape_servicetask3">
+        <omgdc:Bounds height="55.0" width="121.0" x="990.0" y="580.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="callactivity1" id="BPMNShape_callactivity1">
+        <omgdc:Bounds height="55.0" width="105.0" x="670.0" y="490.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="70.0" y="90.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway2" id="BPMNShape_exclusivegateway2">
+        <omgdc:Bounds height="40.0" width="40.0" x="260.0" y="227.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="callactivity2" id="BPMNShape_callactivity2">
+        <omgdc:Bounds height="55.0" width="105.0" x="100.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="subprocess1" id="BPMNShape_subprocess1">
+        <omgdc:Bounds height="111.0" width="401.0" x="280.0" y="340.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="comment_provide" id="BPMNShape_comment_provide">
+        <omgdc:Bounds height="55.0" width="105.0" x="360.0" y="369.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="500.0" y="369.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent2" id="BPMNShape_startevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="290.0" y="379.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent2" id="BPMNShape_endevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="640.0" y="379.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer1" id="BPMNShape_boundarytimer1">
+        <omgdc:Bounds height="30.0" width="30.0" x="604.0" y="330.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="address_comments" id="BPMNShape_address_comments">
+        <omgdc:Bounds height="55.0" width="121.0" x="660.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailTask2" id="BPMNShape_mailTask2">
+        <omgdc:Bounds height="55.0" width="121.0" x="960.0" y="368.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailTask1" id="BPMNShape_mailTask1">
+        <omgdc:Bounds height="55.0" width="121.0" x="1150.0" y="368.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask4" id="BPMNShape_servicetask4">
+        <omgdc:Bounds height="55.0" width="121.0" x="1150.0" y="80.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent3" id="BPMNShape_endevent3">
+        <omgdc:Bounds height="35.0" width="35.0" x="1340.0" y="90.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask5" id="BPMNShape_servicetask5">
+        <omgdc:Bounds height="55.0" width="121.0" x="960.0" y="80.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="correct_definition" id="BPMNShape_correct_definition">
+        <omgdc:Bounds height="55.0" width="121.0" x="220.0" y="80.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="465.0" y="396.0"></omgdi:waypoint>
+        <omgdi:waypoint x="500.0" y="396.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow30" id="BPMNEdge_flow30">
+        <omgdi:waypoint x="325.0" y="396.0"></omgdi:waypoint>
+        <omgdi:waypoint x="360.0" y="396.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow31" id="BPMNEdge_flow31">
+        <omgdi:waypoint x="605.0" y="396.0"></omgdi:waypoint>
+        <omgdi:waypoint x="640.0" y="396.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+        <omgdi:waypoint x="880.0" y="537.0"></omgdi:waypoint>
+        <omgdi:waypoint x="879.0" y="607.0"></omgdi:waypoint>
+        <omgdi:waypoint x="990.0" y="607.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="45.0" x="959.0" y="1060.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow16" id="BPMNEdge_flow16">
+        <omgdi:waypoint x="1111.0" y="607.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1212.0" y="607.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1210.0" y="423.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow20" id="BPMNEdge_flow20">
+        <omgdi:waypoint x="775.0" y="517.0"></omgdi:waypoint>
+        <omgdi:waypoint x="860.0" y="517.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow22" id="BPMNEdge_flow22">
+        <omgdi:waypoint x="900.0" y="517.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1020.0" y="517.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1020.0" y="423.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="39.0" x="972.0" y="950.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
+        <omgdi:waypoint x="300.0" y="247.0"></omgdi:waypoint>
+        <omgdi:waypoint x="410.0" y="247.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="45.0" x="360.0" y="407.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow25" id="BPMNEdge_flow25">
+        <omgdi:waypoint x="280.0" y="227.0"></omgdi:waypoint>
+        <omgdi:waypoint x="280.0" y="135.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="39.0" x="310.0" y="328.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow26" id="BPMNEdge_flow26">
+        <omgdi:waypoint x="105.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="152.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="152.0" y="220.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow27" id="BPMNEdge_flow27">
+        <omgdi:waypoint x="205.0" y="247.0"></omgdi:waypoint>
+        <omgdi:waypoint x="260.0" y="247.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow21" id="BPMNEdge_flow21">
+        <omgdi:waypoint x="720.0" y="275.0"></omgdi:waypoint>
+        <omgdi:waypoint x="722.0" y="490.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow32" id="BPMNEdge_flow32">
+        <omgdi:waypoint x="480.0" y="275.0"></omgdi:waypoint>
+        <omgdi:waypoint x="480.0" y="340.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow33" id="BPMNEdge_flow33">
+        <omgdi:waypoint x="480.0" y="340.0"></omgdi:waypoint>
+        <omgdi:waypoint x="607.0" y="249.0"></omgdi:waypoint>
+        <omgdi:waypoint x="660.0" y="247.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow34" id="BPMNEdge_flow34">
+        <omgdi:waypoint x="619.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="618.0" y="248.0"></omgdi:waypoint>
+        <omgdi:waypoint x="660.0" y="247.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow35" id="BPMNEdge_flow35">
+        <omgdi:waypoint x="1210.0" y="368.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1210.0" y="135.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow36" id="BPMNEdge_flow36">
+        <omgdi:waypoint x="1271.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1340.0" y="107.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow37" id="BPMNEdge_flow37">
+        <omgdi:waypoint x="1020.0" y="368.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1020.0" y="135.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow38" id="BPMNEdge_flow38">
+        <omgdi:waypoint x="1020.0" y="80.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1021.0" y="57.0"></omgdi:waypoint>
+        <omgdi:waypoint x="152.0" y="57.0"></omgdi:waypoint>
+        <omgdi:waypoint x="152.0" y="220.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow28" id="BPMNEdge_flow28">
+        <omgdi:waypoint x="220.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="152.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="152.0" y="220.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

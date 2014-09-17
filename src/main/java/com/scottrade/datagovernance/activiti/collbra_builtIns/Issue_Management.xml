@@ -1,0 +1,892 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <collaboration id="Collaboration">
+    <participant id="pool1" name="Issue Management" processRef="issueManagement"></participant>
+  </collaboration>
+  <process id="issueManagement" name="Issue Management" isExecutable="true">
+    <documentation>This process handles all issues. It will automatically be started when a new issue is created. Roles are assigned dynamically by the process using the configured user expressions. 
+
+First a reviewer can accept to do the review, or if no reviewer responds within time-limit, the issue manager is asked to assign a reviewer. The reviewer can then choose to ask more information, choose another reviewer, reject the issue or accept the issue and propose a solution.
+
+If the issue is accepted, the stakeholders are asked to vote for the proposed solution and if accepted, the reviewer can assign a assignee and ask him to implement the solution.
+
+The assignee can reassign to another assignee or implement the solution himself. After implementing the reviewer is asked to review the solution and when accepted, the requester is notified of the resolution and the process is ended.</documentation>
+    <laneSet id="laneSet_issueManagement">
+      <lane id="lane2">
+        <flowNodeRef>endevent1</flowNodeRef>
+        <flowNodeRef>exclusivegateway7</flowNodeRef>
+        <flowNodeRef>startevent1</flowNodeRef>
+      </lane>
+      <lane id="lane3" name="Requester">
+        <flowNodeRef>servicetask4</flowNodeRef>
+        <flowNodeRef>servicetask9</flowNodeRef>
+        <flowNodeRef>servicetask18</flowNodeRef>
+        <flowNodeRef>servicetask22</flowNodeRef>
+        <flowNodeRef>servicetask23</flowNodeRef>
+        <flowNodeRef>provide_information</flowNodeRef>
+      </lane>
+      <lane id="lane4" name="Reviewer">
+        <flowNodeRef>exclusivegateway2</flowNodeRef>
+        <flowNodeRef>exclusivegateway3</flowNodeRef>
+        <flowNodeRef>servicetask16</flowNodeRef>
+        <flowNodeRef>servicetask13</flowNodeRef>
+        <flowNodeRef>servicetask15</flowNodeRef>
+        <flowNodeRef>exclusivegateway6</flowNodeRef>
+        <flowNodeRef>assign_assignee</flowNodeRef>
+        <flowNodeRef>review_solution</flowNodeRef>
+        <flowNodeRef>servicetask19</flowNodeRef>
+        <flowNodeRef>reassign_reviewer</flowNodeRef>
+        <flowNodeRef>servicetask11</flowNodeRef>
+        <flowNodeRef>accept_review</flowNodeRef>
+        <flowNodeRef>exclusivegateway8</flowNodeRef>
+        <flowNodeRef>review_issue</flowNodeRef>
+        <flowNodeRef>servicetask12</flowNodeRef>
+      </lane>
+      <lane id="lane5" name="Stakeholder">
+        <flowNodeRef>servicetask15</flowNodeRef>
+        <flowNodeRef>exclusivegateway5</flowNodeRef>
+        <flowNodeRef>servicetask20</flowNodeRef>
+        <flowNodeRef>callactivity1</flowNodeRef>
+      </lane>
+      <lane id="lane6" name="Assignee">
+        <flowNodeRef>servicetask17</flowNodeRef>
+        <flowNodeRef>provide_solution</flowNodeRef>
+        <flowNodeRef>reassign_assignee</flowNodeRef>
+        <flowNodeRef>exclusivegateway4</flowNodeRef>
+        <flowNodeRef>servicetask14</flowNodeRef>
+        <flowNodeRef>servicetask21</flowNodeRef>
+        <flowNodeRef>servicetask5</flowNodeRef>
+      </lane>
+      <lane id="lane7" name="Issue Manager">
+        <flowNodeRef>assign_reviewer</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="startevent1" name="Start" activiti:initiator="requester">
+      <extensionElements>
+        <activiti:formProperty id="acceptReviewDuration" name="Time before escalation of &quot;Accept Review&quot; task" default="B10D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="reviewIssueDuration" name="Time before &quot;Review Issue&quot; task escalation" default="B2D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="provideSolutionDuration" name="Time before &quot;Provide Solution&quot; task is escalated" default="B7D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="moreInformationDuration" name="Time before &quot;Provide more information&quot; task is escalated" default="B30D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="voteWarningTimeDuration" name="Time before a warning is send to the stakeholders for approving the proposed solution" type="string" default="B3D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="voteTimeoutDuration" name="Time before the approve solution by the stakeholders step is continued" type="string" default="B5D" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="stakeholderUserExpression" name="User expression for stakeholders of the issue" type="string" default="role(Steward)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="reviewerUserExpression" name="User expression for reviewers of the issue" type="string" default="role(Steward)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="assigneeUserExpression" name="User expression for Assignees of the issue" type="string" default="role(Steward)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="fallbackUserExpression" name="User expression for users to fallback to when the users of the initial user task are empty" type="string" default="user(Admin)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="issueManagerUserExpression" name="User expression for Issue Managers of the issue" type="string" default="role(Issue Manager)" readable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="sendVotingActionEmails" name="Send an action email to users that are required to vote in the process" type="boolean" default="false" readable="false" required="true"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <userTask id="reassign_reviewer" name="Reassign Reviewer" activiti:candidateUsers="role(Reviewer)">
+      <documentation>Assign a new reviewer for this issue.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="userName" name="User" type="user">
+          <activiti:value id="proposedValues" name="${proposedUsers}"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="group" name="Group" type="group"></activiti:formProperty>
+        <activiti:formProperty id="role" name="Role" type="roleInCommunity"></activiti:formProperty>
+        <activiti:formProperty id="reassignReviewerButton" name="Reassign" type="taskButton" writable="false"></activiti:formProperty>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetValueTaskListener">
+          <activiti:field name="resultVariable">
+            <activiti:string><![CDATA[proposedUsers]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="userExpression">
+            <activiti:expression>${reviewerUserExpression}</activiti:expression>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="complete" class="com.collibra.dgc.core.workflow.activiti.tasklistener.CheckMandatoryFieldCombinationTaskListener">
+          <activiti:field name="formFields">
+            <activiti:string><![CDATA[userName,role,group]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetFormSubtitleTaskListener">
+          <activiti:field name="subtitle">
+            <activiti:string><![CDATA[workflowReassignSubtitle]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <serviceTask id="servicetask4" name="Notify Rejection" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+      <extensionElements>
+        <activiti:field name="template">
+          <activiti:string><![CDATA[rejection]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="mailTo">
+          <activiti:string><![CDATA[role(Requester)]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <userTask id="assign_assignee" name="Appoint assignee or mark as resolved" activiti:candidateUsers="role(Reviewer)">
+      <documentation>Appoint the assignee to solve this issue or immediately mark this issue as resolved.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="userName" name="User" type="user">
+          <activiti:value id="proposedValues" name="${proposedUsers}"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="group" name="Group" type="group"></activiti:formProperty>
+        <activiti:formProperty id="role" name="Role" type="roleInCommunity"></activiti:formProperty>
+        <activiti:formProperty id="resolveButton" name="Resolve" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="assignButton" name="Assign" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="assignAssigneeButton" name="Assign or Resolve" type="taskButton" writable="false"></activiti:formProperty>
+        <activiti:taskListener event="complete" class="com.collibra.dgc.core.workflow.activiti.tasklistener.CheckMandatoryFieldCombinationTaskListener">
+          <activiti:field name="formFields">
+            <activiti:string><![CDATA[userName,role,group]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetValueTaskListener">
+          <activiti:field name="resultVariable">
+            <activiti:string><![CDATA[proposedUsers]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="userExpression">
+            <activiti:expression>${assigneeUserExpression}</activiti:expression>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetFormSubtitleTaskListener">
+          <activiti:field name="subtitle">
+            <activiti:string><![CDATA[workflowReassignResolveSubtitle]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <userTask id="review_solution" name="Review Solution" activiti:candidateUsers="role(Reviewer)">
+      <documentation>Review the solution provided.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="accepted" name="Accept" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="rejected" name="Reject" type="button" default="false"></activiti:formProperty>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.listener.SetActivityStreamListener">
+          <activiti:field name="startTask">
+            <activiti:string><![CDATA[provide_solution]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <userTask id="provide_information" name="Provide Information" activiti:candidateUsers="role(Requester)">
+      <documentation>Please provide more information about this issue.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="info" name="Additional Information" type="textarea" required="true"></activiti:formProperty>
+        <activiti:formProperty id="taskButton" name="Provide Information" type="taskButton" default="false"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <boundaryEvent id="boundarytimer4" name="boundarytimer4" attachedToRef="provide_information" cancelActivity="false">
+      <timerEventDefinition>
+        <timeDuration>${moreInformationDuration}</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <serviceTask id="servicetask9" name="Notify Resolution" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+      <extensionElements>
+        <activiti:field name="mailTo">
+          <activiti:string><![CDATA[role(Requester)]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="template">
+          <activiti:string><![CDATA[resolution]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <exclusiveGateway id="exclusivegateway2" name="Exclusive Gateway"></exclusiveGateway>
+    <userTask id="accept_review" name="Accept Review" activiti:candidateUsers="user(${currentReviewer})">
+      <documentation>Do you want to review this issue?</documentation>
+      <extensionElements>
+        <activiti:formProperty id="accept" name="Accept" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="reject" name="Reject" type="button" default="false"></activiti:formProperty>
+      </extensionElements>
+      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="${users.getUserNamesWithError(reviewerUserExpression)}" activiti:elementVariable="currentReviewer">
+        <completionCondition>${accept}</completionCondition>
+      </multiInstanceLoopCharacteristics>
+    </userTask>
+    <boundaryEvent id="boundarytimer1" name="boundarytimer1" attachedToRef="accept_review" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDuration>${acceptReviewDuration}</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <exclusiveGateway id="exclusivegateway3" name="Exclusive Gateway"></exclusiveGateway>
+    <serviceTask id="servicetask11" name="Mark as &quot;Under Review&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005020]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <userTask id="review_issue" name="Analyse and propose solution" activiti:candidateUsers="role(Reviewer)">
+      <documentation>Please review, analyse and propose a solution for this issue.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="reassign" name="Reassign Reviewer" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="moreInformation" name="More Information" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="rejected" name="Invalid Issue" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="accepted" name="Request Approval" type="button" default="false"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <boundaryEvent id="boundarytimer2" name="boundarytimer2" attachedToRef="review_issue" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDuration>${reviewIssueDuration}</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <serviceTask id="servicetask12" name="Mark as &quot;Invalid&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005022]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask16" name="Mark as &quot;New&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005058]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask13" name="Mark as &quot;Resolved&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005057]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask18" name="Mark as &quot;Pending&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005059]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <userTask id="assign_reviewer" name="Assign Reviewer" activiti:candidateUsers="${issueManagerUserExpression}">
+      <documentation>Assign a reviewer for this issue.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="userName" name="User" type="user">
+          <activiti:value id="proposedValues" name="${proposedUsers}"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="group" name="Group" type="group"></activiti:formProperty>
+        <activiti:formProperty id="role" name="Reviewer" type="roleInCommunity"></activiti:formProperty>
+        <activiti:formProperty id="assignButton" name="Assign" type="taskButton"></activiti:formProperty>
+        <activiti:taskListener event="complete" class="com.collibra.dgc.core.workflow.activiti.tasklistener.CheckMandatoryFieldCombinationTaskListener">
+          <activiti:field name="formFields">
+            <activiti:string><![CDATA[userName,role,group]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetValueTaskListener">
+          <activiti:field name="resultVariable">
+            <activiti:string><![CDATA[proposedUsers]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="userExpression">
+            <activiti:expression>${reviewerUserExpression}</activiti:expression>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetFormSubtitleTaskListener">
+          <activiti:field name="subtitle">
+            <activiti:string><![CDATA[workflowReassignSubtitle]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <serviceTask id="servicetask17" name="Mark as &quot;In Progress&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005019]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask5" name="Notify Requester" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.MailSender">
+      <extensionElements>
+        <activiti:field name="template">
+          <activiti:string><![CDATA[in-progress]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="mailTo">
+          <activiti:string><![CDATA[role(Requester)]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <userTask id="reassign_assignee" name="Reappoint Assignee" activiti:candidateUsers="role(Assignee)">
+      <documentation>Assign another person to solve this issue.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="userName" name="User" type="user">
+          <activiti:value id="proposedValues" name="${proposedUsers}"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="group" name="Group" type="group"></activiti:formProperty>
+        <activiti:formProperty id="role" name="Role" type="roleInCommunity"></activiti:formProperty>
+        <activiti:formProperty id="reassignAssigneeButton" name="Reappoint Assignee" type="taskButton" writable="false"></activiti:formProperty>
+        <activiti:taskListener event="complete" class="com.collibra.dgc.core.workflow.activiti.tasklistener.CheckMandatoryFieldCombinationTaskListener">
+          <activiti:field name="formFields">
+            <activiti:string><![CDATA[userName,role,group]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetValueTaskListener">
+          <activiti:field name="resultVariable">
+            <activiti:string><![CDATA[proposedUsers]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="userExpression">
+            <activiti:expression>${assigneeUserExpression}</activiti:expression>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="com.collibra.dgc.core.workflow.activiti.tasklistener.SetFormSubtitleTaskListener">
+          <activiti:field name="subtitle">
+            <activiti:string><![CDATA[workflowReassignSubtitle]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <userTask id="provide_solution" name="Provide Solution" activiti:candidateUsers="role(Assignee)">
+      <documentation>Please provide the solution for this Issue.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="solved" name="Solved" type="button" default="false"></activiti:formProperty>
+        <activiti:formProperty id="reassign" name="Reassign" type="button" default="false"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <boundaryEvent id="boundarytimer3" name="boundarytimer3" attachedToRef="provide_solution" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDuration>${provideSolutionDuration}</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <exclusiveGateway id="exclusivegateway4" name="Exclusive Gateway"></exclusiveGateway>
+    <serviceTask id="servicetask14" name="Mark as &quot;Resolution Pending&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005056]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <callActivity id="callactivity1" name="Approve Solution" calledElement="votingSubProcess">
+      <extensionElements>
+        <activiti:in sourceExpression="${&quot;Please verify if the proposed solution is acceptable. If not, please reject and provide a reason.&quot;}" target="decisionInfo"></activiti:in>
+        <activiti:in source="stakeholderUserExpression" target="voterUserExpression"></activiti:in>
+        <activiti:in sourceExpression="${100}" target="votePercentage"></activiti:in>
+        <activiti:in sourceExpression="${true}" target="addComments"></activiti:in>
+        <activiti:in sourceExpression="${false}" target="earlyComplete"></activiti:in>
+        <activiti:in source="voteWarningTimeDuration" target="voteWarningTimeDuration"></activiti:in>
+        <activiti:in source="voteTimeoutDuration" target="voteTimeoutDuration"></activiti:in>
+        <activiti:in sourceExpression="${&quot;Approve/Reject&quot;}" target="voteButtonLabel"></activiti:in>
+        <activiti:in sourceExpression="${&quot;Approval&quot;}" target="voteTaskName"></activiti:in>
+        <activiti:in source="sendVotingActionEmails" target="sendActionEmail"></activiti:in>
+        <activiti:out source="votingResult" target="votingResult"></activiti:out>
+      </extensionElements>
+    </callActivity>
+    <serviceTask id="servicetask15" name="Mark as &quot;Accepted&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005009]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <exclusiveGateway id="exclusivegateway5" name="Exclusive Gateway"></exclusiveGateway>
+    <serviceTask id="servicetask19" name="Mark as &quot;Submitted For Approval&quot;" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005060]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask20" name="Set Reviewer Role" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.GetUserNames">
+      <extensionElements>
+        <activiti:field name="userNames">
+          <activiti:expression>${userName}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="groupNames">
+          <activiti:expression>${group}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="userExpressions">
+          <activiti:expression>${role}</activiti:expression>
+        </activiti:field>
+        <activiti:executionListener event="end" class="com.collibra.dgc.core.workflow.activiti.executionlistener.SetMembersExecutionListener">
+          <activiti:field name="roleName">
+            <activiti:string><![CDATA[Reviewer]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="userNames">
+            <activiti:expression>${assembledUserNames}</activiti:expression>
+          </activiti:field>
+          <activiti:field name="clearExisting">
+            <activiti:string><![CDATA[true]]></activiti:string>
+          </activiti:field>
+        </activiti:executionListener>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask21" name="Set Assignee Role" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.GetUserNames">
+      <extensionElements>
+        <activiti:field name="userNames">
+          <activiti:expression>${userName}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="groupNames">
+          <activiti:expression>${group}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="userExpressions">
+          <activiti:expression>${role}</activiti:expression>
+        </activiti:field>
+        <activiti:executionListener event="end" class="com.collibra.dgc.core.workflow.activiti.executionlistener.SetMembersExecutionListener">
+          <activiti:field name="roleName">
+            <activiti:string><![CDATA[Assignee]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="userNames">
+            <activiti:expression>${assembledUserNames}</activiti:expression>
+          </activiti:field>
+          <activiti:field name="clearExisting">
+            <activiti:string><![CDATA[true]]></activiti:string>
+          </activiti:field>
+        </activiti:executionListener>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow17" sourceRef="review_solution" targetRef="exclusivegateway2"></sequenceFlow>
+    <sequenceFlow id="flow23" sourceRef="servicetask9" targetRef="endevent1"></sequenceFlow>
+    <sequenceFlow id="flow24" sourceRef="servicetask4" targetRef="endevent1"></sequenceFlow>
+    <sequenceFlow id="flow30" sourceRef="review_issue" targetRef="exclusivegateway3"></sequenceFlow>
+    <sequenceFlow id="flow36" sourceRef="servicetask11" targetRef="review_issue"></sequenceFlow>
+    <sequenceFlow id="flow37" sourceRef="exclusivegateway8" targetRef="servicetask11">
+      <extensionElements>
+        <activiti:executionListener event="take" class="com.collibra.dgc.core.workflow.activiti.executionlistener.SetMembersExecutionListener">
+          <activiti:field name="roleName">
+            <activiti:string><![CDATA[Reviewer]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="userNames">
+            <activiti:expression>${users.current}</activiti:expression>
+          </activiti:field>
+        </activiti:executionListener>
+      </extensionElements>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accept}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow39" sourceRef="exclusivegateway3" targetRef="servicetask12">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${rejected}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow53" sourceRef="exclusivegateway3" targetRef="reassign_reviewer">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${reassign}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow56" sourceRef="servicetask16" targetRef="accept_review"></sequenceFlow>
+    <sequenceFlow id="flow68" sourceRef="exclusivegateway2" targetRef="servicetask11">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${rejected}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow69" sourceRef="exclusivegateway2" targetRef="servicetask13">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accepted}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow70" sourceRef="servicetask12" targetRef="servicetask4"></sequenceFlow>
+    <sequenceFlow id="flow47" sourceRef="servicetask13" targetRef="servicetask9"></sequenceFlow>
+    <sequenceFlow id="flow71" sourceRef="exclusivegateway3" targetRef="servicetask18">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${moreInformation}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow72" sourceRef="servicetask18" targetRef="provide_information"></sequenceFlow>
+    <sequenceFlow id="flow73" sourceRef="servicetask23" targetRef="servicetask11"></sequenceFlow>
+    <sequenceFlow id="flow81" sourceRef="boundarytimer4" targetRef="endevent1"></sequenceFlow>
+    <sequenceFlow id="flow82" sourceRef="boundarytimer1" targetRef="assign_reviewer"></sequenceFlow>
+    <sequenceFlow id="flow83" sourceRef="boundarytimer3" targetRef="servicetask15"></sequenceFlow>
+    <sequenceFlow id="flow84" sourceRef="boundarytimer2" targetRef="servicetask16"></sequenceFlow>
+    <sequenceFlow id="flow60" sourceRef="servicetask17" targetRef="servicetask5"></sequenceFlow>
+    <sequenceFlow id="flow14" sourceRef="servicetask5" targetRef="servicetask21"></sequenceFlow>
+    <sequenceFlow id="flow77" sourceRef="reassign_assignee" targetRef="servicetask21"></sequenceFlow>
+    <sequenceFlow id="flow78" sourceRef="provide_solution" targetRef="exclusivegateway4"></sequenceFlow>
+    <sequenceFlow id="flow79" sourceRef="exclusivegateway4" targetRef="reassign_assignee">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${reassign}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow80" sourceRef="exclusivegateway4" targetRef="servicetask14">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${solved}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow49" sourceRef="servicetask14" targetRef="review_solution"></sequenceFlow>
+    <sequenceFlow id="flow52" sourceRef="servicetask15" targetRef="assign_assignee"></sequenceFlow>
+    <sequenceFlow id="flow86" sourceRef="callactivity1" targetRef="exclusivegateway5"></sequenceFlow>
+    <sequenceFlow id="flow87" name="Rejected" sourceRef="exclusivegateway5" targetRef="servicetask11">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!votingResult.votingResult}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow88" name="Approved" sourceRef="exclusivegateway5" targetRef="servicetask15">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${votingResult.votingResult}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow89" sourceRef="exclusivegateway3" targetRef="servicetask19">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accepted}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow90" sourceRef="servicetask19" targetRef="callactivity1"></sequenceFlow>
+    <sequenceFlow id="flow92" sourceRef="assign_reviewer" targetRef="servicetask20"></sequenceFlow>
+    <sequenceFlow id="flow93" sourceRef="reassign_reviewer" targetRef="servicetask20"></sequenceFlow>
+    <sequenceFlow id="flow94" sourceRef="servicetask20" targetRef="servicetask11"></sequenceFlow>
+    <sequenceFlow id="flow95" sourceRef="servicetask21" targetRef="provide_solution"></sequenceFlow>
+    <sequenceFlow id="flow96" sourceRef="assign_assignee" targetRef="exclusivegateway6"></sequenceFlow>
+    <exclusiveGateway id="exclusivegateway6" name="Exclusive Gateway"></exclusiveGateway>
+    <sequenceFlow id="flow97" sourceRef="exclusivegateway6" targetRef="servicetask13">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${resolveButton}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow98" sourceRef="exclusivegateway6" targetRef="servicetask17">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!resolveButton}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="exclusivegateway7" name="Exclusive Gateway"></exclusiveGateway>
+    <serviceTask id="servicetask22" name="Set fallback user" activiti:expression="${fallbackUserExpression}" activiti:resultVariableName="reviewerUserExpression"></serviceTask>
+    <sequenceFlow id="flow99" sourceRef="startevent1" targetRef="exclusivegateway7"></sequenceFlow>
+    <sequenceFlow id="flow100" sourceRef="exclusivegateway7" targetRef="servicetask22">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${users.isEmpty(reviewerUserExpression)}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow101" sourceRef="exclusivegateway7" targetRef="accept_review">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!users.isEmpty(reviewerUserExpression)}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow102" sourceRef="servicetask22" targetRef="accept_review"></sequenceFlow>
+    <exclusiveGateway id="exclusivegateway8" name="Exclusive Gateway"></exclusiveGateway>
+    <sequenceFlow id="flow103" sourceRef="accept_review" targetRef="exclusivegateway8"></sequenceFlow>
+    <sequenceFlow id="flow104" sourceRef="exclusivegateway8" targetRef="servicetask12">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!accept}]]></conditionExpression>
+    </sequenceFlow>
+    <serviceTask id="servicetask23" name="Save Information" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.AddComment">
+      <extensionElements>
+        <activiti:field name="comment">
+          <activiti:expression>${info}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="guestUserExpression">
+          <activiti:string><![CDATA[role(Requester)]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow105" sourceRef="provide_information" targetRef="servicetask23"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collaboration">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration" id="BPMNPlane_Collaboration">
+      <bpmndi:BPMNShape bpmnElement="pool1" id="BPMNShape_pool1">
+        <omgdc:Bounds height="1074.0" width="1321.0" x="30.0" y="10.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane2" id="BPMNShape_lane2">
+        <omgdc:Bounds height="103.0" width="1301.0" x="50.0" y="10.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane3" id="BPMNShape_lane3">
+        <omgdc:Bounds height="189.0" width="1301.0" x="50.0" y="112.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane4" id="BPMNShape_lane4">
+        <omgdc:Bounds height="291.0" width="1301.0" x="50.0" y="300.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane5" id="BPMNShape_lane5">
+        <omgdc:Bounds height="181.0" width="1301.0" x="50.0" y="590.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane6" id="BPMNShape_lane6">
+        <omgdc:Bounds height="180.0" width="1301.0" x="50.0" y="770.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane7" id="BPMNShape_lane7">
+        <omgdc:Bounds height="130.0" width="1301.0" x="50.0" y="949.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="80.0" y="50.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="reassign_reviewer" id="BPMNShape_reassign_reviewer">
+        <omgdc:Bounds height="55.0" width="121.0" x="350.0" y="390.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask4" id="BPMNShape_servicetask4">
+        <omgdc:Bounds height="55.0" width="105.0" x="750.0" y="172.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="assign_assignee" id="BPMNShape_assign_assignee">
+        <omgdc:Bounds height="73.0" width="121.0" x="740.0" y="502.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="review_solution" id="BPMNShape_review_solution">
+        <omgdc:Bounds height="55.0" width="105.0" x="1180.0" y="520.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="1280.0" y="40.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="provide_information" id="BPMNShape_provide_information">
+        <omgdc:Bounds height="71.0" width="105.0" x="240.0" y="140.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer4" id="BPMNShape_boundarytimer4">
+        <omgdc:Bounds height="30.0" width="30.0" x="280.0" y="120.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask9" id="BPMNShape_servicetask9">
+        <omgdc:Bounds height="55.0" width="105.0" x="1180.0" y="172.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway2" id="BPMNShape_exclusivegateway2">
+        <omgdc:Bounds height="40.0" width="40.0" x="1212.0" y="462.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="accept_review" id="BPMNShape_accept_review">
+        <omgdc:Bounds height="55.0" width="105.0" x="90.0" y="455.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer1" id="BPMNShape_boundarytimer1">
+        <omgdc:Bounds height="30.0" width="30.0" x="110.0" y="502.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway3" id="BPMNShape_exclusivegateway3">
+        <omgdc:Bounds height="40.0" width="40.0" x="494.0" y="321.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask11" id="BPMNShape_servicetask11">
+        <omgdc:Bounds height="66.0" width="121.0" x="240.0" y="455.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="review_issue" id="BPMNShape_review_issue">
+        <omgdc:Bounds height="66.0" width="137.0" x="232.0" y="309.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer2" id="BPMNShape_boundarytimer2">
+        <omgdc:Bounds height="30.0" width="30.0" x="211.0" y="327.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask12" id="BPMNShape_servicetask12">
+        <omgdc:Bounds height="55.0" width="105.0" x="750.0" y="314.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask16" id="BPMNShape_servicetask16">
+        <omgdc:Bounds height="55.0" width="105.0" x="162.0" y="390.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask13" id="BPMNShape_servicetask13">
+        <omgdc:Bounds height="55.0" width="131.0" x="1167.0" y="314.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask18" id="BPMNShape_servicetask18">
+        <omgdc:Bounds height="55.0" width="105.0" x="460.0" y="148.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="assign_reviewer" id="BPMNShape_assign_reviewer">
+        <omgdc:Bounds height="55.0" width="105.0" x="70.0" y="1000.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask17" id="BPMNShape_servicetask17">
+        <omgdc:Bounds height="55.0" width="121.0" x="740.0" y="800.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask5" id="BPMNShape_servicetask5">
+        <omgdc:Bounds height="55.0" width="105.0" x="750.0" y="880.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="reassign_assignee" id="BPMNShape_reassign_assignee">
+        <omgdc:Bounds height="55.0" width="131.0" x="887.0" y="880.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="provide_solution" id="BPMNShape_provide_solution">
+        <omgdc:Bounds height="55.0" width="105.0" x="1050.0" y="800.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer3" id="BPMNShape_boundarytimer3">
+        <omgdc:Bounds height="30.0" width="30.0" x="1080.0" y="780.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway4" id="BPMNShape_exclusivegateway4">
+        <omgdc:Bounds height="40.0" width="40.0" x="1082.0" y="887.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask14" id="BPMNShape_servicetask14">
+        <omgdc:Bounds height="81.0" width="111.0" x="1180.0" y="790.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="callactivity1" id="BPMNShape_callactivity1">
+        <omgdc:Bounds height="81.0" width="131.0" x="450.0" y="617.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask15" id="BPMNShape_servicetask15">
+        <omgdc:Bounds height="55.0" width="121.0" x="590.0" y="511.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway5" id="BPMNShape_exclusivegateway5">
+        <omgdc:Bounds height="40.0" width="40.0" x="495.0" y="720.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask19" id="BPMNShape_servicetask19">
+        <omgdc:Bounds height="73.0" width="131.0" x="450.0" y="502.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask20" id="BPMNShape_servicetask20">
+        <omgdc:Bounds height="55.0" width="121.0" x="240.0" y="617.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask21" id="BPMNShape_servicetask21">
+        <omgdc:Bounds height="55.0" width="105.0" x="900.0" y="800.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway6" id="BPMNShape_exclusivegateway6">
+        <omgdc:Bounds height="40.0" width="40.0" x="960.0" y="516.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway7" id="BPMNShape_exclusivegateway7">
+        <omgdc:Bounds height="40.0" width="40.0" x="150.0" y="47.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask22" id="BPMNShape_servicetask22">
+        <omgdc:Bounds height="55.0" width="105.0" x="90.0" y="172.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway8" id="BPMNShape_exclusivegateway8">
+        <omgdc:Bounds height="40.0" width="40.0" x="194.0" y="527.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask23" id="BPMNShape_servicetask23">
+        <omgdc:Bounds height="55.0" width="105.0" x="240.0" y="240.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow17" id="BPMNEdge_flow17">
+        <omgdi:waypoint x="1232.0" y="520.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1232.0" y="502.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow23" id="BPMNEdge_flow23">
+        <omgdi:waypoint x="1232.0" y="172.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1232.0" y="57.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1280.0" y="57.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
+        <omgdi:waypoint x="802.0" y="172.0"></omgdi:waypoint>
+        <omgdi:waypoint x="802.0" y="57.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1280.0" y="57.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow30" id="BPMNEdge_flow30">
+        <omgdi:waypoint x="369.0" y="342.0"></omgdi:waypoint>
+        <omgdi:waypoint x="494.0" y="341.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow36" id="BPMNEdge_flow36">
+        <omgdi:waypoint x="300.0" y="455.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="375.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow37" id="BPMNEdge_flow37">
+        <omgdi:waypoint x="234.0" y="547.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="521.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow39" id="BPMNEdge_flow39">
+        <omgdi:waypoint x="534.0" y="341.0"></omgdi:waypoint>
+        <omgdi:waypoint x="750.0" y="341.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow53" id="BPMNEdge_flow53">
+        <omgdi:waypoint x="514.0" y="361.0"></omgdi:waypoint>
+        <omgdi:waypoint x="514.0" y="416.0"></omgdi:waypoint>
+        <omgdi:waypoint x="471.0" y="417.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow56" id="BPMNEdge_flow56">
+        <omgdi:waypoint x="162.0" y="417.0"></omgdi:waypoint>
+        <omgdi:waypoint x="142.0" y="416.0"></omgdi:waypoint>
+        <omgdi:waypoint x="142.0" y="455.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow68" id="BPMNEdge_flow68">
+        <omgdi:waypoint x="1212.0" y="482.0"></omgdi:waypoint>
+        <omgdi:waypoint x="361.0" y="488.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow69" id="BPMNEdge_flow69">
+        <omgdi:waypoint x="1232.0" y="462.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1232.0" y="369.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow70" id="BPMNEdge_flow70">
+        <omgdi:waypoint x="802.0" y="314.0"></omgdi:waypoint>
+        <omgdi:waypoint x="802.0" y="227.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow47" id="BPMNEdge_flow47">
+        <omgdi:waypoint x="1232.0" y="314.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1232.0" y="227.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow71" id="BPMNEdge_flow71">
+        <omgdi:waypoint x="514.0" y="321.0"></omgdi:waypoint>
+        <omgdi:waypoint x="512.0" y="203.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow72" id="BPMNEdge_flow72">
+        <omgdi:waypoint x="460.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="345.0" y="175.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow73" id="BPMNEdge_flow73">
+        <omgdi:waypoint x="240.0" y="267.0"></omgdi:waypoint>
+        <omgdi:waypoint x="77.0" y="267.0"></omgdi:waypoint>
+        <omgdi:waypoint x="77.0" y="572.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="572.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="521.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow81" id="BPMNEdge_flow81">
+        <omgdi:waypoint x="295.0" y="120.0"></omgdi:waypoint>
+        <omgdi:waypoint x="294.0" y="57.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1280.0" y="57.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow82" id="BPMNEdge_flow82">
+        <omgdi:waypoint x="125.0" y="532.0"></omgdi:waypoint>
+        <omgdi:waypoint x="122.0" y="1000.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow83" id="BPMNEdge_flow83">
+        <omgdi:waypoint x="1095.0" y="780.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1094.0" y="739.0"></omgdi:waypoint>
+        <omgdi:waypoint x="650.0" y="739.0"></omgdi:waypoint>
+        <omgdi:waypoint x="650.0" y="566.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow84" id="BPMNEdge_flow84">
+        <omgdi:waypoint x="241.0" y="342.0"></omgdi:waypoint>
+        <omgdi:waypoint x="213.0" y="354.0"></omgdi:waypoint>
+        <omgdi:waypoint x="214.0" y="390.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow60" id="BPMNEdge_flow60">
+        <omgdi:waypoint x="800.0" y="855.0"></omgdi:waypoint>
+        <omgdi:waypoint x="802.0" y="880.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
+        <omgdi:waypoint x="802.0" y="880.0"></omgdi:waypoint>
+        <omgdi:waypoint x="952.0" y="855.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow77" id="BPMNEdge_flow77">
+        <omgdi:waypoint x="952.0" y="880.0"></omgdi:waypoint>
+        <omgdi:waypoint x="952.0" y="855.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow78" id="BPMNEdge_flow78">
+        <omgdi:waypoint x="1102.0" y="855.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1102.0" y="887.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow79" id="BPMNEdge_flow79">
+        <omgdi:waypoint x="1082.0" y="907.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1018.0" y="907.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow80" id="BPMNEdge_flow80">
+        <omgdi:waypoint x="1122.0" y="907.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1232.0" y="906.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1235.0" y="871.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow49" id="BPMNEdge_flow49">
+        <omgdi:waypoint x="1235.0" y="790.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1232.0" y="575.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow52" id="BPMNEdge_flow52">
+        <omgdi:waypoint x="711.0" y="538.0"></omgdi:waypoint>
+        <omgdi:waypoint x="740.0" y="538.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow86" id="BPMNEdge_flow86">
+        <omgdi:waypoint x="515.0" y="698.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="720.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow87" id="BPMNEdge_flow87">
+        <omgdi:waypoint x="495.0" y="740.0"></omgdi:waypoint>
+        <omgdi:waypoint x="438.0" y="740.0"></omgdi:waypoint>
+        <omgdi:waypoint x="438.0" y="487.0"></omgdi:waypoint>
+        <omgdi:waypoint x="361.0" y="488.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="43.0" x="12.0" y="127.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow88" id="BPMNEdge_flow88">
+        <omgdi:waypoint x="535.0" y="740.0"></omgdi:waypoint>
+        <omgdi:waypoint x="650.0" y="739.0"></omgdi:waypoint>
+        <omgdi:waypoint x="650.0" y="566.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="47.0" x="443.0" y="760.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow89" id="BPMNEdge_flow89">
+        <omgdi:waypoint x="514.0" y="361.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="502.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow90" id="BPMNEdge_flow90">
+        <omgdi:waypoint x="515.0" y="575.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="617.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow92" id="BPMNEdge_flow92">
+        <omgdi:waypoint x="175.0" y="1027.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="1027.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="672.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow93" id="BPMNEdge_flow93">
+        <omgdi:waypoint x="410.0" y="445.0"></omgdi:waypoint>
+        <omgdi:waypoint x="410.0" y="735.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="735.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="672.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow94" id="BPMNEdge_flow94">
+        <omgdi:waypoint x="300.0" y="617.0"></omgdi:waypoint>
+        <omgdi:waypoint x="300.0" y="521.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow95" id="BPMNEdge_flow95">
+        <omgdi:waypoint x="1005.0" y="827.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1050.0" y="827.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow96" id="BPMNEdge_flow96">
+        <omgdi:waypoint x="861.0" y="538.0"></omgdi:waypoint>
+        <omgdi:waypoint x="960.0" y="536.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow97" id="BPMNEdge_flow97">
+        <omgdi:waypoint x="980.0" y="516.0"></omgdi:waypoint>
+        <omgdi:waypoint x="980.0" y="341.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1167.0" y="341.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow98" id="BPMNEdge_flow98">
+        <omgdi:waypoint x="980.0" y="556.0"></omgdi:waypoint>
+        <omgdi:waypoint x="979.0" y="654.0"></omgdi:waypoint>
+        <omgdi:waypoint x="802.0" y="654.0"></omgdi:waypoint>
+        <omgdi:waypoint x="800.0" y="800.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow99" id="BPMNEdge_flow99">
+        <omgdi:waypoint x="115.0" y="67.0"></omgdi:waypoint>
+        <omgdi:waypoint x="150.0" y="67.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow100" id="BPMNEdge_flow100">
+        <omgdi:waypoint x="170.0" y="87.0"></omgdi:waypoint>
+        <omgdi:waypoint x="169.0" y="143.0"></omgdi:waypoint>
+        <omgdi:waypoint x="145.0" y="143.0"></omgdi:waypoint>
+        <omgdi:waypoint x="142.0" y="172.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow101" id="BPMNEdge_flow101">
+        <omgdi:waypoint x="190.0" y="67.0"></omgdi:waypoint>
+        <omgdi:waypoint x="231.0" y="67.0"></omgdi:waypoint>
+        <omgdi:waypoint x="231.0" y="257.0"></omgdi:waypoint>
+        <omgdi:waypoint x="142.0" y="257.0"></omgdi:waypoint>
+        <omgdi:waypoint x="142.0" y="455.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow102" id="BPMNEdge_flow102">
+        <omgdi:waypoint x="142.0" y="227.0"></omgdi:waypoint>
+        <omgdi:waypoint x="142.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="142.0" y="455.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow103" id="BPMNEdge_flow103">
+        <omgdi:waypoint x="142.0" y="510.0"></omgdi:waypoint>
+        <omgdi:waypoint x="214.0" y="527.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow104" id="BPMNEdge_flow104">
+        <omgdi:waypoint x="234.0" y="547.0"></omgdi:waypoint>
+        <omgdi:waypoint x="350.0" y="546.0"></omgdi:waypoint>
+        <omgdi:waypoint x="802.0" y="369.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow105" id="BPMNEdge_flow105">
+        <omgdi:waypoint x="292.0" y="211.0"></omgdi:waypoint>
+        <omgdi:waypoint x="292.0" y="240.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
