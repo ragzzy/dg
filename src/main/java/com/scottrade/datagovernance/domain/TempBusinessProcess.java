@@ -1,6 +1,6 @@
 package com.scottrade.datagovernance.domain;
 
-import java.util.List;
+import java.util.Map;
 
 public class TempBusinessProcess {
 
@@ -15,8 +15,8 @@ public class TempBusinessProcess {
 	private String bpSpApplNm;
 	private String bpSpParticipant;
 	private String bpSpDataEntity;
-	private List<String> bpSpParticipantList;
-	private List<String> bpSpDataEntityList;
+	private Map<String, String> bpSpParticipantMap;
+	private Map<String, String> bpSpDataEntityMap;
 	private String bpSpCurrCrudVal;
 	private int bpSpCurrCrudCreate;
 	private int bpSpCurrCrudRead;
@@ -27,6 +27,10 @@ public class TempBusinessProcess {
 	private int bpSpReqdCrudRead;
 	private int bpSpReqdCrudUpdate;
 	private int bpSpReqdCrudDelete;
+	private String bpSpNotes;
+	private String bpFilePath;
+	private String bpFileName;
+
 	/**
 	 * @return the bpId
 	 */
@@ -160,30 +164,6 @@ public class TempBusinessProcess {
 		this.bpSpDataEntity = bpSpDataEntity;
 	}
 	/**
-	 * @return the bpSpParticipantList
-	 */
-	public List<String> getBpSpParticipantList() {
-		return bpSpParticipantList;
-	}
-	/**
-	 * @param bpSpParticipantList the bpSpParticipantList to set
-	 */
-	public void setBpSpParticipantList(List<String> bpSpParticipantList) {
-		this.bpSpParticipantList = bpSpParticipantList;
-	}
-	/**
-	 * @return the bpSpDataEntityList
-	 */
-	public List<String> getBpSpDataEntityList() {
-		return bpSpDataEntityList;
-	}
-	/**
-	 * @param bpSpDataEntityList the bpSpDataEntityList to set
-	 */
-	public void setBpSpDataEntityList(List<String> bpSpDataEntityList) {
-		this.bpSpDataEntityList = bpSpDataEntityList;
-	}
-	/**
 	 * @return the bpSpCurrCrudVal
 	 */
 	public String getBpSpCurrCrudVal() {
@@ -303,6 +283,67 @@ public class TempBusinessProcess {
 	public void setBpSpReqdCrudDelete(int bpSpReqdCrudDelete) {
 		this.bpSpReqdCrudDelete = bpSpReqdCrudDelete;
 	}
+
+	/**
+	 * @return the bpSpParticipantMap
+	 */
+	public Map<String, String> getBpSpParticipantMap() {
+		return bpSpParticipantMap;
+	}
+	/**
+	 * @param bpSpParticipantMap the bpSpParticipantMap to set
+	 */
+	public void setBpSpParticipantMap(Map<String, String> bpSpParticipantMap) {
+		this.bpSpParticipantMap = bpSpParticipantMap;
+	}
+	/**
+	 * @return the bpSpDataEntityMap
+	 */
+	public Map<String, String> getBpSpDataEntityMap() {
+		return bpSpDataEntityMap;
+	}
+	/**
+	 * @param bpSpDataEntityMap the bpSpDataEntityMap to set
+	 */
+	public void setBpSpDataEntityMap(Map<String, String> bpSpDataEntityMap) {
+		this.bpSpDataEntityMap = bpSpDataEntityMap;
+	}
+	/**
+	 * @return the bpFilePath
+	 */
+	public String getBpFilePath() {
+		return bpFilePath;
+	}
+	/**
+	 * @param bpFilePath the bpFilePath to set
+	 */
+	public void setBpFilePath(String bpFilePath) {
+		this.bpFilePath = bpFilePath;
+	}
+	/**
+	 * @return the bpFileName
+	 */
+	public String getBpFileName() {
+		return bpFileName;
+	}
+	/**
+	 * @param bpFileName the bpFileName to set
+	 */
+	public void setBpFileName(String bpFileName) {
+		this.bpFileName = bpFileName;
+	}
+	/**
+	 * @return the bpSpNotes
+	 */
+	public String getBpSpNotes() {
+		return bpSpNotes;
+	}
+	/**
+	 * @param bpSpNotes the bpSpNotes to set
+	 */
+	public void setBpSpNotes(String bpSpNotes) {
+		this.bpSpNotes = bpSpNotes;
+	}
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -313,10 +354,8 @@ public class TempBusinessProcess {
 				+ bpBPOTitle + ", bpBPOdeptTeamNm=" + bpBPOdeptTeamNm
 				+ ", bpDesc=" + bpDesc + ", bpSignOffDate=" + bpSignOffDate
 				+ ", bpSpNm=" + bpSpNm + ", bpSpApplNm=" + bpSpApplNm
-				+ ", bpSpParticipant=" + bpSpParticipant + ", bpSpDataEntity="
-				+ bpSpDataEntity + ", bpSpParticipantList="
-				+ bpSpParticipantList + ", bpSpDataEntityList="
-				+ bpSpDataEntityList + ", bpSpCurrCrudVal=" + bpSpCurrCrudVal
+				+ ", bpSpParticipant=" + bpSpParticipant + ", bpSpDataEntity=" + bpSpDataEntity  
+				+ ", bpSpCurrCrudVal=" + bpSpCurrCrudVal
 				+ ", bpSpCurrCrudCreate=" + bpSpCurrCrudCreate
 				+ ", bpSpCurrCrudRead=" + bpSpCurrCrudRead
 				+ ", bpSpCurrCrudUpdate=" + bpSpCurrCrudUpdate
@@ -325,8 +364,7 @@ public class TempBusinessProcess {
 				+ ", bpSpReqdCrudCreate=" + bpSpReqdCrudCreate
 				+ ", bpSpReqdCrudRead=" + bpSpReqdCrudRead
 				+ ", bpSpReqdCrudUpdate=" + bpSpReqdCrudUpdate
-				+ ", bpSpReqdCrudDelete=" + bpSpReqdCrudDelete + "]";
+				+ ", bpSpReqdCrudDelete=" + bpSpReqdCrudDelete
+				+ ", bpSpNotes=" + bpSpNotes + "]";
 	}
-
-	
 }

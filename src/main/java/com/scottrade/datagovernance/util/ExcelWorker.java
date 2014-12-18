@@ -1,17 +1,22 @@
 package com.scottrade.datagovernance.util;
 
 //"C:/RNANDAKUMAR/temp/IRA-Final.xlsx"
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.UserPrincipal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -34,6 +39,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.util.CollectionUtils;
 
 import com.scottrade.datagovernance.domain.ApplicationMaster;
 import com.scottrade.datagovernance.domain.DataEntity;
@@ -43,20 +49,15 @@ import com.scottrade.datagovernance.domain.TempBusinessProcess;
 public class ExcelWorker {
 
 	//https://myinsider.scottrade.com/portal/page/portal/Scottrade%20Intranet/Departments/Privacy%20and%20Data%20Governance/Data%20Governance/Business%20Process%20Inventory%20Project
-	//file://stlfs1/homedirs/Privacy%20and%20Data%20Governance/Data%20Governance/Current/Data%20Ownership/Business%20Process%20Inventory%20-%20Insider%20Page/Business%20Process%20Template.xlsx
-	//file://stlfs1/homedirs/Privacy%20and%20Data%20Governance/Data%20Governance/Current/Data%20Ownership/Business%20Process%20Inventory%20-%20Insider%20Page/Master%20Application%20List.xlsx
-	//file://stlfs1/homedirs/Privacy%20and%20Data%20Governance/Data%20Governance/Current/Data%20Ownership/Business%20Process%20Inventory%20-%20Insider%20Page/HR%20Position%20Master%20List.xlsx
-	//file://stlfs1/homedirs/Privacy%20and%20Data%20Governance/Data%20Governance/Current/Data%20Ownership/Business%20Process%20Inventory%20-%20Insider%20Page/Data%20Entity%20Master%20List.xlsx
-
 	// Insider Path's
-//	static final String pathForDEfile = "//stlfs1/homedirs/Privacy%20and%20Data%20Governance/Data%20Governance/Current/Data%20Ownership/Business%20Process%20Inventory%20-%20Insider%20Page/Data%20Entity%20Master%20List.xlsx";
-//	static final String pathForAppMstr = "//stlfs1/homedirs/Privacy%20and%20Data%20Governance/Data%20Governance/Current/Data%20Ownership/Business%20Process%20Inventory%20-%20Insider%20Page/Master%20Application%20List.xlsx";
-//	static final String pathForHRPosnTitles = "//stlfs1/homedirs/Privacy%20and%20Data%20Governance/Data%20Governance/Current/Data%20Ownership/Business%20Process%20Inventory%20-%20Insider%20Page/HR%20Position%20Master%20List.xlsx";
-
+	static final String pathForDEfile = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/Data Entity Master List.xlsx";
+	static final String pathForAppMstr = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/Master Application List.xlsx";
+	static final String pathForHRPosnTitles = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/HR Position Master List.xlsx";
+	
 	// Temporary local path's
-	static final String pathForDEfile = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/Data Entity Master List.xlsx";
-	static final String pathForAppMstr = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/Master Application List.xlsx";
-	static final String pathForHRPosnTitles = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/HR Position Master List.xlsx";
+//	static final String pathForDEfile = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/Data Entity Master List.xlsx";
+//	static final String pathForAppMstr = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/Master Application List.xlsx";
+//	static final String pathForHRPosnTitles = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/HR Position Master List.xlsx";
 
 	// Local lists for processing.
 	private static Map<String, ApplicationMaster> appMstrMap = new HashMap<String, ApplicationMaster>();
@@ -74,6 +75,10 @@ public class ExcelWorker {
 	static final String USER = "dg_user";
 	static final String PASS = "dg_4pp_u53r";
 
+	// Counters
+	static int iTotalRecords = 0;
+	static int iTotalErrorRecords = 0;
+
 	/**
 	 * Method to populate the Data Entities, Applications and HR Department Positions needed for validation and processing.
 	 */
@@ -89,7 +94,6 @@ public class ExcelWorker {
 			System.out.println(hrPositionList.size() + " HR Department Positions loaded.");
 			System.out.println("************************************");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -101,11 +105,25 @@ public class ExcelWorker {
 		// readXLSXFile();
 
 		populateLists();
-		readDGbpTemplateFile("");
+//		readDGbpTemplateFile("S:\\Privacy And Data Governance\\Data Governance\\Current\\Data Ownership\\Applications\\Business Process\\3. Completed Business Process Inventories\\Complete - Business Strategy\\Client Fulfillment & Imp - Final.xlsx");
 
-//	    String ROOT = "S:\\Privacy And Data Governance\\Data Governance\\Current\\Data Ownership\\Applications\\Business Process\\3. Completed Business Process Inventories\\";
-//	    FileVisitor<Path> fileProcessor = new ProcessFile();
-//	    Files.walkFileTree(Paths.get(ROOT), fileProcessor);
+		// Clean up Errors and Inserts files.
+		File fErrors  = new File("C://RNANDAKUMAR//WIP//inserts//bpErrors.txt");
+		File fInserts = new File("C://RNANDAKUMAR//WIP//inserts//bpInserts.txt");
+
+		if ( fErrors.exists() ) {
+			fErrors.delete();
+		}
+
+		if ( fInserts.exists() ) {
+			fInserts.delete();
+		}
+
+	    String ROOT = "S:\\Privacy And Data Governance\\Data Governance\\Current\\Data Ownership\\Applications\\Business Process\\3. Completed Business Process Inventories\\";
+	    FileVisitor<Path> fileProcessor = new ProcessFile();
+	    Files.walkFileTree(Paths.get(ROOT), fileProcessor);
+
+	    System.out.println("Total Records: " + iTotalRecords + " | Total Error Records: " + iTotalErrorRecords);
 	}
 
 	/**
@@ -114,22 +132,23 @@ public class ExcelWorker {
 	 */
 	private static final class ProcessFile extends SimpleFileVisitor<Path> {
 		 // First (minor) speed up. Compile regular expression pattern only one time.
-        private Pattern finalFileNamePattern = Pattern.compile("^(.*Final.xlsx)");
+        private Pattern finalFileNamePattern = Pattern.compile("^(.* - final.xlsx)", Pattern.CASE_INSENSITIVE);
 
 		@Override
 		public FileVisitResult visitFile ( Path aFile, BasicFileAttributes aAttrs ) throws IOException {
 			boolean finalFileNameMatch = finalFileNamePattern.matcher(aFile.toString()).matches();
 
 			if ( finalFileNameMatch && !aFile.getFileName().toString().startsWith("~$")) {
-				System.out.println("====================================================================================================================================================================");
-				UserPrincipal owner = Files.getOwner(aFile);
-				String username = owner.getName();
-
-				System.out.println("Processing: " + "owner: " + username + " | " + aFile.toString());
-				System.out.println("Column C = Applications | Column D = Participants | Column E = Data Entities");
+				try ( PrintWriter pwOut = new PrintWriter ( new BufferedWriter ( new FileWriter ("C://RNANDAKUMAR//WIP//inserts//bpErrors.txt", true) ) ) ) {
+					pwOut.println(aFile.toString().replace("\\", "//"));
+					System.out.println(aFile.toString().replace("\\", "//"));
+				}
+				catch (IOException e) {
+				    //exception handling left as an exercise for the reader
+				}
 
 				try {
-					readDGbpTemplateFile(aFile.toString());
+					readDGbpTemplateFile(aFile.toString().replace("\\", "//"));
 				}
 				catch (FileNotFoundException fnfe) {
 					System.out.println("File NOT FOUND!!  Check Directory for temporary files!");
@@ -146,16 +165,16 @@ public class ExcelWorker {
 	 * 
 	 * @throws IOException
 	 */
-	public static void readDGbpTemplateFile(String fileName) throws IOException {
-		InputStream ExcelFileToRead = new FileInputStream("C:/RNANDAKUMAR/temp/IRA-Final.xlsx");
-//		InputStream ExcelFileToRead = new FileInputStream(fileName);
+	private static void readDGbpTemplateFile(String fileName) throws IOException {
+//		InputStream ExcelFileToRead = new FileInputStream("C:/RNANDAKUMAR/temp/IRA-Final.xlsx");
+		InputStream ExcelFileToRead = new FileInputStream(fileName);
 
-		String strBPdeptTeamNm  = EMPTY_STRING;
-		String strBPONm         = EMPTY_STRING;
-		String strBPOTitle      = EMPTY_STRING;
-		String strBPOdeptTeamNm = EMPTY_STRING;
-		String strBPDesc        = EMPTY_STRING;
-		String strBPSignOffDate = EMPTY_STRING;
+		String strBPdeptTeamNm   = EMPTY_STRING;
+		String strBPONm          = EMPTY_STRING;
+		String strBPOTitle       = EMPTY_STRING;
+		String strBPOdeptTeamNm  = EMPTY_STRING;
+		String strBPDesc         = EMPTY_STRING;
+		String strBPSignOffDate  = EMPTY_STRING;
 
 		String strSpName         = EMPTY_STRING;  // Sub Process Name column
 		String strSpApplication  = EMPTY_STRING;  // Applications column
@@ -163,119 +182,306 @@ public class ExcelWorker {
 		String strSpParticipants = EMPTY_STRING;  // Participants column
 		String strSpCurrAccess   = EMPTY_STRING;  // Current Access column
 		String strSpReqdAccess   = EMPTY_STRING;  // Required Access column
+		String strSpNotes        = EMPTY_STRING;  // Notes
 
-		String strExitRowKeyTxt = "endDGxyz";
+		String strExitRowKeyTxt  = "endDGxyz";
 		List<TempBusinessProcess> tmpBPlist = null;
+		List<Integer> workSheetNumsToRead = null;
 
 		XSSFWorkbook wb = new XSSFWorkbook(ExcelFileToRead);
-		XSSFSheet sheet = wb.getSheetAt(1);
-
-		/* BEGIN - Determine start and end rows for Business Sub Processes */
-		int iStartRowNum = 0;
-		int iEndRowNum = 0;
-		boolean boolBreakRowLoop = true;
-		StringBuilder sbError = null;
-
-		for(Row currRow : sheet) {
-			if ( boolBreakRowLoop ) {
-
-				// If the cell is missing from the file, generate a blank one
-				// (Works by specifying a MissingCellPolicy)
-
-				if ( iStartRowNum == 0 ) {
-					String strBpLabel = StringUtils.trimToEmpty(currRow.getCell(1, Row.CREATE_NULL_AS_BLANK).toString());
-					String strBpValue = StringUtils.trimToEmpty(currRow.getCell(2, Row.CREATE_NULL_AS_BLANK).toString());
-
-					switch (strBpLabel) {
-						case "Business Process (Department/Team)":
-							strBPdeptTeamNm = strBpValue;
-							break;
-						case "Business Process Owner (Name)":
-							strBPONm = strBpValue;
-							break;
-						case "Business Process Owner (Title)":
-							strBPOTitle = strBpValue;
-							break;
-						case "Business Process Owner (Dept/Team)":
-							strBPOdeptTeamNm = strBpValue;
-							break;
-						case "Business Process Description":
-							strBPDesc = strBpValue;
-							break;
-						case "Signoff Date":
-							strBPSignOffDate = strBpValue;
-							break;
-						case "Sub Process Name":
-							iStartRowNum = currRow.getRowNum() + 1;
-							break;
-						default:
-							break;
-					}
+		
+		// Loop through the Sheets in the Workbook to catch all "Business Process Summary".
+		for ( int iSheetNum = 0; iSheetNum < wb.getNumberOfSheets(); iSheetNum++ ) {
+			if ( wb.getSheetName(iSheetNum).contains("Business Process Summary") ) {
+				if (CollectionUtils.isEmpty(workSheetNumsToRead)) {
+					workSheetNumsToRead = new ArrayList<Integer>();
 				}
-				else if (	iStartRowNum > 0 && currRow.getRowNum() >= iStartRowNum ) {
-					TempBusinessProcess tmpBp = new TempBusinessProcess();
-					if ( null == sbError ) {
-						sbError = new StringBuilder();
-					}
-					
-					if ( null == tmpBPlist ) {
-						tmpBPlist = new ArrayList<TempBusinessProcess>();
-					}
 
-					strSpName         = StringUtils.trimToEmpty(currRow.getCell(1, Row.CREATE_NULL_AS_BLANK).toString()); // Sub Process Name
-					strSpApplication  = StringUtils.trimToEmpty(currRow.getCell(2, Row.CREATE_NULL_AS_BLANK).toString()); // Application
-					strSpParticipants = StringUtils.trimToEmpty(currRow.getCell(3, Row.CREATE_NULL_AS_BLANK).toString()); // Participants
-					strSpDataEntity   = StringUtils.trimToEmpty(currRow.getCell(4, Row.CREATE_NULL_AS_BLANK).toString()); // Data Entities
-					strSpCurrAccess   = cleanCRUDEntries(currRow.getCell(5, Row.CREATE_NULL_AS_BLANK).toString());        // Current Access
-					strSpReqdAccess   = cleanCRUDEntries(currRow.getCell(6, Row.CREATE_NULL_AS_BLANK).toString());        // Required Access
-
-					System.out.println(currRow.getRowNum() + " | " + strSpName + " | " + strSpApplication + " | " + strSpDataEntity + " | " + strSpParticipants + " | " + strSpCurrAccess + " | " + strSpReqdAccess);
-
-					// If a blank cell is encountered on the sub process name column, the row looping terminates.
-					if (	StringUtils.trimToEmpty(strSpName).length() == 0
-						 || strSpName.equals(strExitRowKeyTxt) ) {
-						iEndRowNum = currRow.getRowNum() - 1;
-						boolBreakRowLoop = false;
-					}
-
-					tmpBp.setBpDeptTeamNm(strBPdeptTeamNm);
-					tmpBp.setBpBPONm(strBPONm);
-					tmpBp.setBpBPOTitle(strBPOTitle);
-					tmpBp.setBpBPOdeptTeamNm(strBPOdeptTeamNm);
-					tmpBp.setBpDesc(strBPDesc);
-					tmpBp.setBpSignOffDate(strBPSignOffDate);
-					tmpBp.setBpSpNm(strSpName);
-					tmpBp.setBpSpApplNm(parseVerifyApplNm(strSpApplication, "C" + currRow.getRowNum(), sbError));
-					tmpBp.setBpSpParticipantList(parseVerifyParticipants(strSpParticipants, "D" + currRow.getRowNum(), sbError));
-					tmpBp.setBpSpDataEntityList (parseVerifyDataEntities(strSpDataEntity, "E" + currRow.getRowNum(), sbError));
-					// Decode CRUD and separate to flags
-					tmpBp.setBpSpCurrCrudCreate(checkCRUDEntries(strSpCurrAccess, "C"));
-					tmpBp.setBpSpCurrCrudRead  (checkCRUDEntries(strSpCurrAccess, "R"));
-					tmpBp.setBpSpCurrCrudUpdate(checkCRUDEntries(strSpCurrAccess, "U"));
-					tmpBp.setBpSpCurrCrudDelete(checkCRUDEntries(strSpCurrAccess, "D"));
-					tmpBp.setBpSpCurrCrudVal(cleanCRUDEntries(strSpCurrAccess));
-					// Decode CRUD and separate to flags
-					tmpBp.setBpSpReqdCrudCreate(checkCRUDEntries(strSpReqdAccess, "C"));
-					tmpBp.setBpSpReqdCrudRead  (checkCRUDEntries(strSpReqdAccess, "R"));
-					tmpBp.setBpSpReqdCrudUpdate(checkCRUDEntries(strSpReqdAccess, "U"));
-					tmpBp.setBpSpReqdCrudDelete(checkCRUDEntries(strSpReqdAccess, "D"));
-					tmpBp.setBpSpReqdCrudVal(cleanCRUDEntries(strSpReqdAccess));
-
-					tmpBPlist.add(tmpBp);
-				}
+				workSheetNumsToRead.add(iSheetNum);
 			}
 		}
 
-		if ( null != sbError && StringUtils.trimToEmpty(sbError.toString()).length() > 0 ) {
-			System.err.println(sbError);
-		}
+		if (!CollectionUtils.isEmpty(workSheetNumsToRead) ) {
+			for ( int iSheet : workSheetNumsToRead ) {
+				XSSFSheet sheet = wb.getSheetAt(iSheet);
 
-		System.out.println("iStartRowNum: " + iStartRowNum + " | iEndRowNum: " + iEndRowNum);
-		System.out.println(strBPdeptTeamNm + "|" + strBPONm + "|" + strBPOTitle + "|" + strBPOdeptTeamNm + "|" + strBPDesc + "|" + strBPSignOffDate);
-		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> List COUNT: " + tmpBPlist.size());
+				System.out.println(sheet.getLastRowNum());
+
+				/* BEGIN - Determine start and end rows for Business Sub Processes */
+				int iStartRowNum = 0;
+				int iEndRowNum = sheet.getLastRowNum() + 1;
+				boolean boolBreakRowLoop     = true;
+				StringBuilder sbError        = null;
+
+				for(Row currRow : sheet) {
+					iTotalRecords++;
+					if ( boolBreakRowLoop ) {
+	
+						// If the cell is missing from the file, generate a blank one
+						// (Works by specifying a MissingCellPolicy)
+		
+						if ( iStartRowNum == 0 ) {
+							String strBpLabel = StringUtils.trimToEmpty(currRow.getCell(1, Row.CREATE_NULL_AS_BLANK).toString());
+							String strBpValue = StringUtils.trimToEmpty(currRow.getCell(2, Row.CREATE_NULL_AS_BLANK).toString());
+		
+							switch (strBpLabel) {
+								case "Business Process (Department/Team)":
+									strBPdeptTeamNm = strBpValue;
+									break;
+								case "Business Process Owner (Name)":
+									strBPONm = strBpValue;
+									break;
+								case "Business Process Owner (Title)":
+									strBPOTitle = strBpValue;
+									break;
+								case "Business Process Owner (Dept/Team)":
+									strBPOdeptTeamNm = strBpValue;
+									break;
+								case "Business Process Description":
+									strBPDesc = strBpValue;
+									break;
+								case "Signoff Date":
+									strBPSignOffDate = strBpValue;
+									break;
+								case "Sign off Date":
+									strBPSignOffDate = strBpValue;
+									break;
+								case "Sign Off Date":
+									strBPSignOffDate = strBpValue;
+									break;
+								case "SignOff Date":
+									strBPSignOffDate = strBpValue;
+									break;
+								case "Sub Process Name":
+									iStartRowNum = currRow.getRowNum() + 1;
+									break;
+								default:
+									break;
+							}
+						}
+						else if (	iStartRowNum > 0 
+								 && currRow.getRowNum() >= iStartRowNum
+								 && currRow.getRowNum() <= iEndRowNum
+								) {
+
+							strSpName         = StringUtils.trimToEmpty(currRow.getCell(1, Row.CREATE_NULL_AS_BLANK).toString()); // Sub Process Name
+							strSpApplication  = StringUtils.trimToEmpty(currRow.getCell(2, Row.CREATE_NULL_AS_BLANK).toString()); // Application
+							strSpParticipants = StringUtils.trimToEmpty(currRow.getCell(3, Row.CREATE_NULL_AS_BLANK).toString()); // Participants
+							strSpDataEntity   = StringUtils.trimToEmpty(currRow.getCell(4, Row.CREATE_NULL_AS_BLANK).toString()); // Data Entities
+							strSpCurrAccess   = cleanCRUDEntries(currRow.getCell(5, Row.CREATE_NULL_AS_BLANK).toString());        // Current Access
+							strSpReqdAccess   = cleanCRUDEntries(currRow.getCell(6, Row.CREATE_NULL_AS_BLANK).toString());        // Required Access
+							strSpNotes        = cleanNewLines(currRow.getCell(7, Row.CREATE_NULL_AS_BLANK).toString());           // Notes
+
+							// If a blank cell is encountered on the sub process name column, the row looping terminates.
+//							if (	StringUtils.trimToEmpty(strSpName).length() == 0
+//								 || strSpName.equals(strExitRowKeyTxt) ) {
+//								iEndRowNum = currRow.getRowNum() - 1;
+//								boolBreakRowLoop = false;
+//							}
+
+							// If a Sub Process Name is not found, continue to next iteration.
+							if ( StringUtils.trimToEmpty(strSpName).length() == 0 ) {
+								// If the SP Name row contains the pre-determined Exit Row text, then set break row loop after. 
+								if ( strSpName.equals(strExitRowKeyTxt) ) {
+									boolBreakRowLoop = false;
+								}
+								else {
+									continue;
+								}
+							}
+		
+							TempBusinessProcess tmpBp = new TempBusinessProcess();
+							if ( null == sbError ) {
+								sbError = new StringBuilder();
+							}
+	
+							if ( null == tmpBPlist ) {
+								tmpBPlist = new ArrayList<TempBusinessProcess>();
+							}
+	
+							tmpBp.setBpFilePath(fileName);
+							tmpBp.setBpDeptTeamNm(strBPdeptTeamNm);
+							tmpBp.setBpBPONm(strBPONm);
+							tmpBp.setBpBPOTitle(strBPOTitle);
+							tmpBp.setBpBPOdeptTeamNm(strBPOdeptTeamNm);
+							tmpBp.setBpDesc(
+								cleanNewLines(strBPDesc));
+							tmpBp.setBpSignOffDate(strBPSignOffDate);
+							tmpBp.setBpSpNm(strSpName);
+							tmpBp.setBpSpApplNm(
+								parseVerifyApplNm(
+									strSpApplication, 
+									((XSSFCell) currRow.getCell(2, Row.CREATE_NULL_AS_BLANK)).getReference(),
+									sbError
+								)
+							);
+							tmpBp.setBpSpParticipantMap(
+								parseVerifyParticipants(
+									strSpParticipants,
+									((XSSFCell) currRow.getCell(3, Row.CREATE_NULL_AS_BLANK)).getReference(),
+									sbError
+								)
+							);
+							tmpBp.setBpSpDataEntityMap(
+								parseVerifyDataEntities(
+									strSpDataEntity,
+									((XSSFCell) currRow.getCell(4, Row.CREATE_NULL_AS_BLANK)).getReference(),
+									sbError
+								)
+							);
+	
+							// Decode CRUD and separate to flags
+							tmpBp.setBpSpCurrCrudCreate(checkCRUDEntries(strSpCurrAccess, "C"));
+							tmpBp.setBpSpCurrCrudRead  (checkCRUDEntries(strSpCurrAccess, "R"));
+							tmpBp.setBpSpCurrCrudUpdate(checkCRUDEntries(strSpCurrAccess, "U"));
+							tmpBp.setBpSpCurrCrudDelete(checkCRUDEntries(strSpCurrAccess, "D"));
+							tmpBp.setBpSpCurrCrudVal(cleanCRUDEntries(strSpCurrAccess));
+							// Decode CRUD and separate to flags
+							tmpBp.setBpSpReqdCrudCreate(checkCRUDEntries(strSpReqdAccess, "C"));
+							tmpBp.setBpSpReqdCrudRead  (checkCRUDEntries(strSpReqdAccess, "R"));
+							tmpBp.setBpSpReqdCrudUpdate(checkCRUDEntries(strSpReqdAccess, "U"));
+							tmpBp.setBpSpReqdCrudDelete(checkCRUDEntries(strSpReqdAccess, "D"));
+							tmpBp.setBpSpReqdCrudVal(cleanCRUDEntries(strSpReqdAccess));
+							tmpBp.setBpSpNotes(strSpNotes);
+		
+							tmpBPlist.add(tmpBp);
+//							System.out.println(currRow.getRowNum() + " | " + strSpName + " | " + strSpApplication + " | " + strSpDataEntity + " | " + strSpParticipants + " | " + strSpCurrAccess + " | " + strSpReqdAccess);
+						}
+					}
+		
+					if ( null != sbError && StringUtils.trimToEmpty(sbError.toString()).length() > 0 ) {
+						try ( PrintWriter pwOut = new PrintWriter ( new BufferedWriter ( new FileWriter ("C://RNANDAKUMAR//WIP//inserts//bpErrors.txt", true) ) ) ) {
+							pwOut.println(sbError.toString());
+							sbError = null;
+						}
+						catch (IOException e) {
+						    //exception handling left as an exercise for the reader
+						}
+		
+						iTotalErrorRecords++;
+					}
+				}
+
+//				System.out.println("iStartRowNum: " + iStartRowNum + " | iEndRowNum: " + iEndRowNum);
+//				System.out.println(strBPdeptTeamNm + "|" + strBPONm + "|" + strBPOTitle + "|" + strBPOdeptTeamNm + "|" + strBPDesc + "|" + strBPSignOffDate);
+//				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> List COUNT: " + tmpBPlist.size());
+	
+				generateInsertStatements(tmpBPlist, fileName);
+			}
+		}
 		/* END   - Determine start and end rows for Business Sub Processes */
 	}
 
+	/**
+	 * Write List contents to text file. In the needed INSERT format for SQL. 
+	 */
+	private static void generateInsertStatements ( List<TempBusinessProcess> bpList, String processedFileNamePath ) {
+		if ( null != bpList && bpList.size() > 0 ) {
+			String insertPrefix =
+				"INSERT INTO temp_busprocess_data ("
+					+   " as_of_da"
+					+	",bp_dept_team_nm"
+					+	",bp_bpo_nm"
+					+	",bp_bpo_title"
+					+	",bp_bpo_dept_team_nm"
+					+	",bp_desc"
+					+	",bp_signoff_date"
+					+	",bp_sp_nm"
+					+	",bp_sp_appl_nm"
+					+	",bp_sp_participant_posn_title"
+					+	",bp_sp_participant_job_title"
+					+	",bp_sp_dataentity"
+					+	",bp_sp_dataentity_class"
+					+	",bp_sp_curr_crud_val"
+					+	",bp_sp_curr_crud_create"
+					+	",bp_sp_curr_crud_read"
+					+	",bp_sp_curr_crud_update"
+					+	",bp_sp_curr_crud_delete"
+					+	",bp_sp_curr_reqd_val"
+					+	",bp_sp_curr_reqd_create"
+					+	",bp_sp_curr_reqd_read"
+					+	",bp_sp_curr_reqd_update"
+					+	",bp_sp_curr_reqd_delete"
+					+   ",bp_sp_notes"
+					+	",bp_file_path"
+					+" ) VALUES ( CURDATE(), ";
+
+			String insertSuffix = ");";
+
+			for ( TempBusinessProcess tmpBp : bpList ) {
+				if ( null != tmpBp.getBpSpDataEntityMap() && tmpBp.getBpSpDataEntityMap().size() > 0 ) {
+					for ( Map.Entry<String, String> dataEntityEntry : tmpBp.getBpSpDataEntityMap().entrySet() ) {
+						if ( null != tmpBp.getBpSpParticipantMap() && tmpBp.getBpSpParticipantMap().size() > 0 ) {
+							for (Map.Entry<String, String> participantEntry : tmpBp.getBpSpParticipantMap().entrySet())
+							{
+								StringBuilder sb = new StringBuilder();
+								  sb.append(insertPrefix)
+								  	.append("\"")
+									.append(tmpBp.getBpDeptTeamNm())
+									.append("\",\"")
+									.append(tmpBp.getBpBPONm())
+									.append("\",\"")
+									.append(tmpBp.getBpBPOTitle())
+									.append("\",\"")
+									.append(tmpBp.getBpBPOdeptTeamNm())
+									.append("\",\"")
+									.append(tmpBp.getBpDesc())
+									.append("\",\"")
+									.append(tmpBp.getBpSignOffDate())
+									.append("\",\"")
+									.append(tmpBp.getBpSpNm())
+									.append("\",\"")
+									.append(tmpBp.getBpSpApplNm())
+									.append("\",\"")
+									.append(participantEntry.getKey())   // position title
+									.append("\",\"")
+									.append(participantEntry.getValue()) // job title
+									.append("\",\"")
+									.append(dataEntityEntry.getKey())    // data entity name
+									.append("\",\"")
+									.append(dataEntityEntry.getValue())  // classification - internal or external
+									.append("\",\"")
+									.append(tmpBp.getBpSpCurrCrudVal())
+									.append("\",")
+									.append(tmpBp.getBpSpCurrCrudCreate())
+									.append(",")
+									.append(tmpBp.getBpSpCurrCrudRead())
+									.append(",")
+									.append(tmpBp.getBpSpCurrCrudUpdate())
+									.append(",")
+									.append(tmpBp.getBpSpCurrCrudDelete())
+									.append(",\"")
+									.append(tmpBp.getBpSpReqdCrudVal())
+									.append("\",")
+									.append(tmpBp.getBpSpReqdCrudCreate())
+									.append(",")
+									.append(tmpBp.getBpSpReqdCrudRead())
+									.append(",")
+									.append(tmpBp.getBpSpReqdCrudUpdate())
+									.append(",")
+									.append(tmpBp.getBpSpReqdCrudDelete())
+									.append(",\"")
+									.append(tmpBp.getBpSpNotes())
+									.append("\",\"")
+									.append(processedFileNamePath)
+									.append("\"")
+									.append(insertSuffix);
+								;
+
+								try ( PrintWriter pwOut = new PrintWriter ( new BufferedWriter ( new FileWriter ("C://RNANDAKUMAR//WIP//inserts//bpInserts.txt", true) ) ) ) {
+									pwOut.println(sb.toString());
+								}
+								catch (IOException e) {
+								    //exception handling left as an exercise for the reader
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Clean CRUD strings
 	 */
@@ -300,7 +506,9 @@ public class ExcelWorker {
 //		inStr = StringUtils.removePattern(inStr, "\\r");
 
 		/* "\\s{2,}", ""  TRY THIS TO REPLACE ALL newlines at once using String.replaceAll() */
-		inStr = inStr.replaceAll("\\s{2,}", EMPTY_STRING).replaceAll("(  )", " ");
+		inStr = inStr.replaceAll("(\\r|\\n|\\r\\n)+", ". ").replaceAll("(  )", " ");
+		// Remove any double quotes as well.
+		inStr = inStr.replace("\"",  "");
 		return inStr;
 	}
 
@@ -312,7 +520,7 @@ public class ExcelWorker {
 
 		// Spit out to Validation - Exception report.
 		if ( !appMstrMap.containsKey(inStr)) {
-			sbErrorIn.append("|" + strCellRef + " >> " + inStr + "\n");
+			sbErrorIn.append("|" + strCellRef + ">" + inStr);
 			return "ERR-" + inStr;
 		}
 		else {
@@ -321,49 +529,55 @@ public class ExcelWorker {
 	}
 
 	/**
-	 * Clean and parse the Data Entity strings and build them into List<String>.
+	 * Clean and parse the Data Entity strings and build them into Map<String, String>.  The KEY being the Entity name, and VALUE being the classification, internal or external.
 	 * @param str - the input string
 	 * @param str - the cell reference to log the error string.
 	 * @return
 	 */
-	private static List<String> parseVerifyDataEntities ( String inStr, String strCellRef, StringBuilder sbErrorIn ) {
+	private static Map<String, String> parseVerifyDataEntities ( String inStr, String strCellRef, StringBuilder sbErrorIn ) {
 		inStr = StringUtils.trimToEmpty(inStr).replaceAll("(, )", ",");
 
 		// Fetch, tokenize and validate against Data Entities list.
 		StringTokenizer stDE = new StringTokenizer(inStr, ",");
-		List<String> tmpDElist = null;
+		Map<String, String> tmpDEmap = null;
 		while (stDE.hasMoreElements()) {
 
-			String deEntered = (String) stDE.nextElement();
+			String deEntered = StringUtils.trimToEmpty((String) stDE.nextElement());
+			boolean boolDEclassification = (deEntered.startsWith("E-") || deEntered.startsWith("e-"));
+			String deClassification = boolDEclassification ? "External" : "Internal";
+
+			if ( boolDEclassification ) {
+				deEntered = deEntered.substring(2);
+			}
+
 			if ( dataEntityMap.containsKey(deEntered)) {
-				if ( null == tmpDElist ) {
-					tmpDElist = new ArrayList<String>();
+				if ( null == tmpDEmap ) {
+					tmpDEmap = new HashMap<String, String>();
 				}
 
-				tmpDElist.add(deEntered);
+				tmpDEmap.put(deEntered, deClassification);
 			}
 			// Spit out to Validation - Exception report.
 			else {
-				
-				sbErrorIn.append("|" + strCellRef + ">>" + deEntered + "\n");
+				sbErrorIn.append("|" + strCellRef + ">" + (boolDEclassification ? "E-" + deEntered : deEntered));
 			}
 		}
 
-		return tmpDElist;
+		return tmpDEmap;
 	}
 
 	/**
-	 * Clean and parse the Participants' strings and build them into List<String>.
+	 * Clean and parse the Participants' strings and build them into Map<String, String>.
 	 * @param str - the input string
 	 * @param str - the cell reference to log the error string.
 	 * @return
 	 */
-	private static List<String> parseVerifyParticipants (String inStr, String strCellRef, StringBuilder sbErrorIn ) {
+	private static Map<String, String> parseVerifyParticipants (String inStr, String strCellRef, StringBuilder sbErrorIn ) {
 
 		inStr = StringUtils.trimToEmpty(inStr).replaceAll("(, )", ",");
 
 		// Fetch, tokenize and validate against participants list.
-		List<String> tmpParticipList = null;
+		Map<String, String> tmpParticipMap = null;
 		StringTokenizer stParticipEntered = new StringTokenizer(inStr, ",");
 		while (stParticipEntered.hasMoreElements()) {
 
@@ -375,22 +589,22 @@ public class ExcelWorker {
 					// if match found, break.
 					matchFound = true;
 
-					if ( null == tmpParticipList ) {
-						tmpParticipList = new ArrayList<String>();
+					if ( null == tmpParticipMap ) {
+						tmpParticipMap = new HashMap<String, String>();
 					}
 
-					tmpParticipList.add(particip);
+					tmpParticipMap.put(hrDeptPos.getJobPositionTitle(), hrDeptPos.getJobTitle());
 					break;
 				}
 			}
 
 			// Spit out to Validation - Exception report.
 			if (!matchFound) {
-				sbErrorIn.append("|" + strCellRef + ">>" + particip + "\n");
+				sbErrorIn.append("|" + strCellRef + ">" + particip);
 			}
 		}
 
-		return tmpParticipList;
+		return tmpParticipMap;
 	}
 	
 	/**
@@ -439,10 +653,10 @@ public class ExcelWorker {
 		appMstrMap = new HashMap<String, ApplicationMaster>();
 		
 		for ( Row applRow : applWS ) {
-			if ( applRow.getRowNum() > 1 ) {
-				applNm = StringUtils.trimToEmpty(applRow.getCell(1, Row.CREATE_NULL_AS_BLANK).toString());
-				applDsc = StringUtils.trimToEmpty(applRow.getCell(2, Row.CREATE_NULL_AS_BLANK).toString());
-				applDOscope = StringUtils.trimToEmpty(applRow.getCell(0, Row.CREATE_NULL_AS_BLANK).toString());
+//			if ( applRow.getRowNum() > 1 ) {
+				applNm = StringUtils.trimToEmpty(applRow.getCell(0, Row.CREATE_NULL_AS_BLANK).toString());
+				applDsc = StringUtils.trimToEmpty(applRow.getCell(1, Row.CREATE_NULL_AS_BLANK).toString());
+				applDOscope = StringUtils.trimToEmpty(applRow.getCell(2, Row.CREATE_NULL_AS_BLANK).toString());
 				applRBACscope = StringUtils.trimToEmpty(applRow.getCell(3, Row.CREATE_NULL_AS_BLANK).toString());
 
 				if ( !applNm.equals(EMPTY_STRING)) {
@@ -451,7 +665,7 @@ public class ExcelWorker {
 				else {
 					break;
 				}
-			}
+//			}
 		}
 	}
 
