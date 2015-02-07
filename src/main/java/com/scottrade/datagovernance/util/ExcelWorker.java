@@ -50,10 +50,14 @@ public class ExcelWorker {
 
 	//https://myinsider.scottrade.com/portal/page/portal/Scottrade%20Intranet/Departments/Privacy%20and%20Data%20Governance/Data%20Governance/Business%20Process%20Inventory%20Project
 	// Insider Path's
-	static final String pathForDEfile = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/Data Entity Master List.xlsx";
-	static final String pathForAppMstr = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/Master Application List.xlsx";
-	static final String pathForHRPosnTitles = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/HR Position Master List.xlsx";
-	
+//	static final String pathForDEfile = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/Data Entity Master List.xlsx";
+//	static final String pathForAppMstr = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/Master Application List.xlsx";
+//	static final String pathForHRPosnTitles = "//stlfs1/homedirs/Privacy and Data Governance/Data Governance/Current/Data Ownership/Business Process Inventory - Insider Page/HR Position Master List.xlsx";
+
+	static final String pathForDEfile = "S:\\Privacy And Data Governance\\Data Governance\\Current\\Data Ownership\\Business Process Inventory - Insider Page\\Data Entity Master List.xlsx";
+	static final String pathForAppMstr = "S:\\Privacy And Data Governance\\Data Governance\\Current\\Data Ownership\\Business Process Inventory - Insider Page\\Master Application List.xlsx";
+	static final String pathForHRPosnTitles = "S:\\Privacy And Data Governance\\Data Governance\\Current\\Data Ownership\\Business Process Inventory - Insider Page\\HR Position Master List.xlsx";
+
 	// Temporary local path's
 //	static final String pathForDEfile = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/Data Entity Master List.xlsx";
 //	static final String pathForAppMstr = "C:/RNANDAKUMAR/WIP/published_templates_as_of_09042014/Master Application List.xlsx";
@@ -148,7 +152,7 @@ public class ExcelWorker {
 				}
 
 				try {
-					readDGbpTemplateFile(aFile.toString().replace("\\", "//"));
+					readDGbpTemplateFile(aFile.toString().replace("\\", "//"), aFile.getFileName().toString());
 				}
 				catch (FileNotFoundException fnfe) {
 					System.out.println("File NOT FOUND!!  Check Directory for temporary files!");
@@ -165,9 +169,9 @@ public class ExcelWorker {
 	 * 
 	 * @throws IOException
 	 */
-	private static void readDGbpTemplateFile(String fileName) throws IOException {
+	private static void readDGbpTemplateFile(String filePath, String fileName) throws IOException {
 //		InputStream ExcelFileToRead = new FileInputStream("C:/RNANDAKUMAR/temp/IRA-Final.xlsx");
-		InputStream ExcelFileToRead = new FileInputStream(fileName);
+		InputStream ExcelFileToRead = new FileInputStream(filePath);
 
 		String strBPdeptTeamNm   = EMPTY_STRING;
 		String strBPONm          = EMPTY_STRING;
@@ -299,7 +303,7 @@ public class ExcelWorker {
 								tmpBPlist = new ArrayList<TempBusinessProcess>();
 							}
 	
-							tmpBp.setBpFilePath(fileName);
+							tmpBp.setBpFilePath(filePath);
 							tmpBp.setBpDeptTeamNm(strBPdeptTeamNm);
 							tmpBp.setBpBPONm(strBPONm);
 							tmpBp.setBpBPOTitle(strBPOTitle);
@@ -315,13 +319,26 @@ public class ExcelWorker {
 									sbError
 								)
 							);
-							tmpBp.setBpSpParticipantMap(
-								parseVerifyParticipants(
+							// Set this to just persist the participant list as a String value.
+							tmpBp.setBpSpParticipant(
+								getStrParseVerifyParticipants
+								(
 									strSpParticipants,
 									((XSSFCell) currRow.getCell(3, Row.CREATE_NULL_AS_BLANK)).getReference(),
 									sbError
 								)
 							);
+							/*
+							// Set this to convert the Participant list into a MAP.
+							tmpBp.setBpSpParticipantMap(
+								getMapParseVerifyParticipants
+								(
+									strSpParticipants,
+									((XSSFCell) currRow.getCell(3, Row.CREATE_NULL_AS_BLANK)).getReference(),
+									sbError
+								)
+							);
+							*/
 							tmpBp.setBpSpDataEntityMap(
 								parseVerifyDataEntities(
 									strSpDataEntity,
@@ -366,7 +383,7 @@ public class ExcelWorker {
 //				System.out.println(strBPdeptTeamNm + "|" + strBPONm + "|" + strBPOTitle + "|" + strBPOdeptTeamNm + "|" + strBPDesc + "|" + strBPSignOffDate);
 //				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> List COUNT: " + tmpBPlist.size());
 	
-				generateInsertStatements(tmpBPlist, fileName);
+				generateInsertStatements(tmpBPlist, filePath, fileName);
 			}
 		}
 		/* END   - Determine start and end rows for Business Sub Processes */
@@ -375,7 +392,7 @@ public class ExcelWorker {
 	/**
 	 * Write List contents to text file. In the needed INSERT format for SQL. 
 	 */
-	private static void generateInsertStatements ( List<TempBusinessProcess> bpList, String processedFileNamePath ) {
+	private static void generateInsertStatements ( List<TempBusinessProcess> bpList, String processedFilePath, String fileName ) {
 		if ( null != bpList && bpList.size() > 0 ) {
 			String insertPrefix =
 				"INSERT INTO temp_busprocess_data ("
@@ -403,6 +420,7 @@ public class ExcelWorker {
 					+	",bp_sp_curr_reqd_update"
 					+	",bp_sp_curr_reqd_delete"
 					+   ",bp_sp_notes"
+					+   ",bp_file_nm"
 					+	",bp_file_path"
 					+" ) VALUES ( CURDATE(), ";
 
@@ -411,9 +429,8 @@ public class ExcelWorker {
 			for ( TempBusinessProcess tmpBp : bpList ) {
 				if ( null != tmpBp.getBpSpDataEntityMap() && tmpBp.getBpSpDataEntityMap().size() > 0 ) {
 					for ( Map.Entry<String, String> dataEntityEntry : tmpBp.getBpSpDataEntityMap().entrySet() ) {
-						if ( null != tmpBp.getBpSpParticipantMap() && tmpBp.getBpSpParticipantMap().size() > 0 ) {
-							for (Map.Entry<String, String> participantEntry : tmpBp.getBpSpParticipantMap().entrySet())
-							{
+//						if ( null != tmpBp.getBpSpParticipantMap() && tmpBp.getBpSpParticipantMap().size() > 0 ) {
+//							for (Map.Entry<String, String> participantEntry : tmpBp.getBpSpParticipantMap().entrySet()) {
 								StringBuilder sb = new StringBuilder();
 								  sb.append(insertPrefix)
 								  	.append("\"")
@@ -433,9 +450,10 @@ public class ExcelWorker {
 									.append("\",\"")
 									.append(tmpBp.getBpSpApplNm())
 									.append("\",\"")
-									.append(participantEntry.getKey())   // position title
-									.append("\",\"")
-									.append(participantEntry.getValue()) // job title
+									// POSITION title STRING                           // JOB title empty if loading all POSITION TITLES as STRING.
+									.append(tmpBp.getBpSpParticipant()).append("\",\"").append(EMPTY_STRING)
+									// POSITION title STRING                           // JOB title NOT empty if loading all POSITION TITLES MAP.
+//									.append(participantEntry.getKey()) .append("\",\"").append(participantEntry.getValue())
 									.append("\",\"")
 									.append(dataEntityEntry.getKey())    // data entity name
 									.append("\",\"")
@@ -463,7 +481,9 @@ public class ExcelWorker {
 									.append(",\"")
 									.append(tmpBp.getBpSpNotes())
 									.append("\",\"")
-									.append(processedFileNamePath)
+									.append(fileName)
+									.append("\",\"")
+									.append(processedFilePath)
 									.append("\"")
 									.append(insertSuffix);
 								;
@@ -474,8 +494,8 @@ public class ExcelWorker {
 								catch (IOException e) {
 								    //exception handling left as an exercise for the reader
 								}
-							}
-						}
+//							}
+//						}
 					}
 				}
 			}
@@ -572,7 +592,7 @@ public class ExcelWorker {
 	 * @param str - the cell reference to log the error string.
 	 * @return
 	 */
-	private static Map<String, String> parseVerifyParticipants (String inStr, String strCellRef, StringBuilder sbErrorIn ) {
+	private static Map<String, String> getMapParseVerifyParticipants (String inStr, String strCellRef, StringBuilder sbErrorIn ) {
 
 		inStr = StringUtils.trimToEmpty(inStr).replaceAll("(, )", ",");
 
@@ -605,6 +625,43 @@ public class ExcelWorker {
 		}
 
 		return tmpParticipMap;
+	}
+	
+
+	/**
+	 * Clean and parse the Participants' strings and build them into Map<String, String>.
+	 * @param str - the input string
+	 * @param str - the cell reference to log the error string.
+	 * @return
+	 */
+	private static String getStrParseVerifyParticipants (String inStr, String strCellRef, StringBuilder sbErrorIn ) {
+
+		inStr = StringUtils.trimToEmpty(inStr).replaceAll("(, )", ",");
+
+		// Fetch, tokenize and validate against participants list.
+		StringTokenizer stParticipEntered = new StringTokenizer(inStr, ",");
+		while (stParticipEntered.hasMoreElements()) {
+
+			String particip = (String) stParticipEntered.nextElement();
+			boolean matchFound = false;
+
+			for ( HRDepartmentPositions hrDeptPos : hrPositionList ) {
+				if ( hrDeptPos.getJobPositionTitle().equals(particip)) {
+					// if match found, break.
+					matchFound = true;
+					break;
+				}
+			}
+
+			// Spit out to Validation - Exception report.
+/*
+			if (!matchFound) {
+				sbErrorIn.append("|" + strCellRef + ">" + particip);
+			}
+*/
+		}
+
+		return inStr;
 	}
 	
 	/**
