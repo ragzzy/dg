@@ -17,36 +17,45 @@ def generate_random_content(file_type):
     elif file_type == 'pdf':
         return fake.text()
 
-def generate_random_directories(root, depth):
+def generate_random_directories(root, depth, used_names):
     if depth <= 0:
         return
 
     num_dirs = random.randint(1, 3)
     for i in range(num_dirs):
         dir_name = fake.word()
+        while dir_name in used_names:
+            dir_name = fake.word()
+
+        used_names.add(dir_name)
         dir_path = os.path.join(root, dir_name)
         os.makedirs(dir_path)
         
         num_files = random.randint(1, 3)
         for j in range(num_files):
             file_name = fake.word() + '.' + random.choice(['txt', 'csv', 'tsv', 'docx', 'pdf'])
+            while file_name in used_names:
+                file_name = fake.word() + '.' + random.choice(['txt', 'csv', 'tsv', 'docx', 'pdf'])
+
+            used_names.add(file_name)
             file_path = os.path.join(dir_path, file_name)
             
             with open(file_path, 'w') as file:
                 content = generate_random_content(file_name.split('.')[-1])
                 file.write(content)
 
-        generate_random_directories(dir_path, depth - 1)
+        generate_random_directories(dir_path, depth - 1, used_names)
 
 if __name__ == "__main__":
-    root_dir = 'random_files_readable'
+    root_dir = 'random_files_unique'
     total_files = 102238
     total_dirs = 1387
     max_depth = 6
 
     os.makedirs(root_dir, exist_ok=True)
 
+    used_names = set()
     for _ in range(total_dirs):
-        generate_random_directories(root_dir, random.randint(1, max_depth))
+        generate_random_directories(root_dir, random.randint(1, max_depth), used_names)
 
     print(f"Generated {total_files} files across {total_dirs} directories.")
