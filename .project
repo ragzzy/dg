@@ -23,13 +23,13 @@ def generate_random_directories(root, depth):
 
     num_dirs = random.randint(1, 3)
     for i in range(num_dirs):
-        dir_name = ''.join(random.choices(string.ascii_lowercase, k=8))
+        dir_name = fake.word()
         dir_path = os.path.join(root, dir_name)
         os.makedirs(dir_path)
         
         num_files = random.randint(1, 3)
         for j in range(num_files):
-            file_name = ''.join(random.choices(string.ascii_lowercase, k=8)) + '.' + random.choice(['txt', 'csv', 'tsv', 'docx', 'pdf'])
+            file_name = fake.word() + '.' + random.choice(['txt', 'csv', 'tsv', 'docx', 'pdf'])
             file_path = os.path.join(dir_path, file_name)
             
             with open(file_path, 'w') as file:
@@ -39,7 +39,7 @@ def generate_random_directories(root, depth):
         generate_random_directories(dir_path, depth - 1)
 
 if __name__ == "__main__":
-    root_dir = 'random_files'
+    root_dir = 'random_files_readable'
     total_files = 102238
     total_dirs = 1387
     max_depth = 6
