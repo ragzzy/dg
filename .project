@@ -1,6 +1,8 @@
 import os
 import random
 import string
+import hashlib
+import shutil
 from faker import Faker
 
 fake = Faker()
@@ -44,18 +46,33 @@ def generate_random_directories(root, depth, used_names):
                 content = generate_random_content(file_name.split('.')[-1])
                 file.write(content)
 
+            # Calculate MD5 checksum
+            checksum = hashlib.md5(content.encode()).hexdigest()
+
+            # Append to index file
+            with open('index.txt', 'a') as index_file:
+                index_file.write(f"{file_path}|{file_name}|{checksum}\n")
+
         generate_random_directories(dir_path, depth - 1, used_names)
 
 if __name__ == "__main__":
-    root_dir = 'random_files_unique'
+    root_dir = 'random_files_with_index'
+    zip_filename = 'random_files_with_index.zip'
     total_files = 102238
     total_dirs = 1387
     max_depth = 6
 
     os.makedirs(root_dir, exist_ok=True)
+    open('index.txt', 'w').close()  # Clear existing content or create a new file
 
     used_names = set()
     for _ in range(total_dirs):
         generate_random_directories(root_dir, random.randint(1, max_depth), used_names)
 
     print(f"Generated {total_files} files across {total_dirs} directories.")
+    print("Index file created: index.txt")
+
+    # Zip the root directory
+    shutil.make_archive(zip_filename, 'zip', root_dir)
+
+    print(f"Root directory zipped: {zip_filename}")
