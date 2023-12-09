@@ -1,35 +1,41 @@
-You're right, looping through the TSV file multiple times can be inefficient. Here's an updated version that reads the TSV file only once and writes to CSV files on-the-fly:
+Certainly! You can modify the code to check whether the output CSV file already exists and then either create a new file or append to the existing one. Here's an updated version:
 
 ```python
 import csv
 import os
+from collections import defaultdict
 
 tsv_file_path = 'your_input_file.tsv'
 output_folder = 'output_folder/'
 group_column = 'specific_column_name'
 
-# Create a dictionary to store CSV writers for each unique value
-csv_writers = {}
+grouped_data = defaultdict(list)
 
-# Read TSV file and process rows
+# Read TSV file and group data
 with open(tsv_file_path, 'r', newline='', encoding='utf-8') as tsvfile:
     reader = csv.DictReader(tsvfile, delimiter='\t')
-    
     for row in reader:
         value = row[group_column]
-        output_file_path = os.path.join(output_folder, f'{value}_output.csv')
+        grouped_data[value].append(row)
 
-        if value not in csv_writers:
-            # Create CSV writer for the group if it doesn't exist
-            with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
-                fieldnames = reader.fieldnames
-                csv_writers[value] = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                csv_writers[value].writeheader()
+# Process each group
+for value, data in grouped_data.items():
+    output_file_path = os.path.join(output_folder, f'{value}_output.csv')
 
-        # Write the row to the corresponding CSV file
-        csv_writers[value].writerow(row)
+    # Check if the file already exists
+    if os.path.exists(output_file_path):
+        # Append to existing CSV file
+        with open(output_file_path, 'a', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=reader.fieldnames)
+            writer.writerows(data)
+    else:
+        # Create a new CSV file
+        with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=reader.fieldnames)
+            writer.writeheader()
+            writer.writerows(data)
 
-print("CSV files created successfully.")
+print("CSV files updated or created successfully.")
 ```
 
-This code reads the TSV file once and processes each row, writing it to the appropriate CSV file based on the unique value in the specified column. The `csv_writers` dictionary is used to keep track of CSV writers for each unique value, avoiding the need to loop through the TSV file multiple times.
+This code uses `os.path.exists` to check if the output CSV file already exists. If it does, it opens the file in append mode (`'a'`) and appends the data. If the file doesn't exist, it creates a new file and writes the header and data as before.
