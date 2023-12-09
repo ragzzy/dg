@@ -1,4 +1,4 @@
-You're correct, and for large datasets, it can be more memory-efficient to process the data without storing all groups in memory. Here's an alternative approach using a generator and writing to CSV files on the fly:
+You're right, looping through the TSV file multiple times can be inefficient. Here's an updated version that reads the TSV file only once and writes to CSV files on-the-fly:
 
 ```python
 import csv
@@ -8,33 +8,28 @@ tsv_file_path = 'your_input_file.tsv'
 output_folder = 'output_folder/'
 group_column = 'specific_column_name'
 
-# Function to generate rows for a specific group
-def generate_rows_for_group(tsv_file, group_value):
-    with open(tsv_file, 'r', newline='', encoding='utf-8') as tsvfile:
-        reader = csv.DictReader(tsvfile, delimiter='\t')
-        for row in reader:
-            if row[group_column] == group_value:
-                yield row
+# Create a dictionary to store CSV writers for each unique value
+csv_writers = {}
 
-# Read TSV file to get unique values in the specified column
+# Read TSV file and process rows
 with open(tsv_file_path, 'r', newline='', encoding='utf-8') as tsvfile:
     reader = csv.DictReader(tsvfile, delimiter='\t')
-    unique_values = set(row[group_column] for row in reader)
+    
+    for row in reader:
+        value = row[group_column]
+        output_file_path = os.path.join(output_folder, f'{value}_output.csv')
 
-# Process each unique value and write to CSV file
-for value in unique_values:
-    output_file_path = os.path.join(output_folder, f'{value}_output.csv')
+        if value not in csv_writers:
+            # Create CSV writer for the group if it doesn't exist
+            with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                fieldnames = reader.fieldnames
+                csv_writers[value] = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                csv_writers[value].writeheader()
 
-    with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = reader.fieldnames
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-
-        # Use the generator to get rows for the specific group and write to the CSV file
-        rows_for_group = generate_rows_for_group(tsv_file_path, value)
-        writer.writerows(rows_for_group)
+        # Write the row to the corresponding CSV file
+        csv_writers[value].writerow(row)
 
 print("CSV files created successfully.")
 ```
 
-This approach avoids storing all grouped data in memory and processes each group on-the-fly, which can be more efficient for large datasets.
+This code reads the TSV file once and processes each row, writing it to the appropriate CSV file based on the unique value in the specified column. The `csv_writers` dictionary is used to keep track of CSV writers for each unique value, avoiding the need to loop through the TSV file multiple times.
