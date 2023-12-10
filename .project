@@ -1,41 +1,49 @@
-Certainly! You can modify the code to check whether the output CSV file already exists and then either create a new file or append to the existing one. Here's an updated version:
+Certainly! To achieve creating multiple zip files if the cumulative size exceeds 10GB, you can modify the script to handle this scenario. Here's an updated version:
 
 ```python
+import concurrent.futures
+import zipfile
 import csv
 import os
-from collections import defaultdict
 
-tsv_file_path = 'your_input_file.tsv'
-output_folder = 'output_folder/'
-group_column = 'specific_column_name'
+MAX_ZIP_SIZE_GB = 10
 
-grouped_data = defaultdict(list)
+def zip_files(input_path, output_path_template):
+    zip_number = 1
+    current_zip_size = 0
 
-# Read TSV file and group data
-with open(tsv_file_path, 'r', newline='', encoding='utf-8') as tsvfile:
-    reader = csv.DictReader(tsvfile, delimiter='\t')
-    for row in reader:
-        value = row[group_column]
-        grouped_data[value].append(row)
+    with open(input_path, 'r') as csv_file:
+        file_paths = csv.reader(csv_file)
+        for file_path in file_paths:
+            file_path = file_path[0]
+            with open(file_path, 'rb') as file:
+                arcname = os.path.relpath(file_path)
 
-# Process each group
-for value, data in grouped_data.items():
-    output_file_path = os.path.join(output_folder, f'{value}_output.csv')
+                # Check the size before adding each file
+                file_size = os.path.getsize(file_path)
+                if current_zip_size + file_size > MAX_ZIP_SIZE_GB * 1024**3:
+                    # If adding the current file exceeds the limit, start a new zip file
+                    current_zip_size = 0
+                    zip_number += 1
 
-    # Check if the file already exists
-    if os.path.exists(output_file_path):
-        # Append to existing CSV file
-        with open(output_file_path, 'a', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=reader.fieldnames)
-            writer.writerows(data)
-    else:
-        # Create a new CSV file
-        with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=reader.fieldnames)
-            writer.writeheader()
-            writer.writerows(data)
+                output_zip = output_path_template.format(zip_number)
+                with zipfile.ZipFile(output_zip, 'a', zipfile.ZIP_DEFLATED, allowZip64=True) as zip_file:
+                    zip_file.write(file_path, arcname=arcname)
+                    current_zip_size += file_size
 
-print("CSV files updated or created successfully.")
+def process_csv(csv_file):
+    output_zip_template = f"{os.path.splitext(csv_file)[0]}_part{{}}.zip"
+    zip_files(csv_file, output_zip_template)
+    return f"Zipped {csv_file} into multiple parts"
+
+if __name__ == "__main__":
+    csv_files = ["filelist1.csv", "filelist2.csv", "filelist3.csv"]  # Replace with your actual CSV files
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(process_csv, csv_files))
+
+    for result in results:
+        print(result)
 ```
 
-This code uses `os.path.exists` to check if the output CSV file already exists. If it does, it opens the file in append mode (`'a'`) and appends the data. If the file doesn't exist, it creates a new file and writes the header and data as before.
+In this version, the script now appends a part number to the zip file name (`output_zip_template`). When the cumulative size exceeds the limit, it starts a new zip file with an incremented part number. This way, files will be distributed across multiple zip files if the total size surpasses the specified threshold.
