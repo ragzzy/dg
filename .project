@@ -1,49 +1,38 @@
-Certainly! To achieve creating multiple zip files if the cumulative size exceeds 10GB, you can modify the script to handle this scenario. Here's an updated version:
+pip install snowflake-connector-python
 
-```python
-import concurrent.futures
-import zipfile
-import csv
-import os
 
-MAX_ZIP_SIZE_GB = 10
+import snowflake.connector
 
-def zip_files(input_path, output_path_template):
-    zip_number = 1
-    current_zip_size = 0
+# Snowflake connection parameters
+account = 'your_account'
+user = 'your_user'
+password = 'your_password'
+warehouse = 'your_warehouse'
+database = 'your_database'
+schema = 'your_schema'
+stage_name = 'your_stage'
 
-    with open(input_path, 'r') as csv_file:
-        file_paths = csv.reader(csv_file)
-        for file_path in file_paths:
-            file_path = file_path[0]
-            with open(file_path, 'rb') as file:
-                arcname = os.path.relpath(file_path)
+# Local file path
+local_file_path = '/path/to/your/local/file.csv'
 
-                # Check the size before adding each file
-                file_size = os.path.getsize(file_path)
-                if current_zip_size + file_size > MAX_ZIP_SIZE_GB * 1024**3:
-                    # If adding the current file exceeds the limit, start a new zip file
-                    current_zip_size = 0
-                    zip_number += 1
+# Snowflake connection
+conn = snowflake.connector.connect(
+    user=user,
+    password=password,
+    account=account,
+    warehouse=warehouse,
+    database=database,
+    schema=schema
+)
 
-                output_zip = output_path_template.format(zip_number)
-                with zipfile.ZipFile(output_zip, 'a', zipfile.ZIP_DEFLATED, allowZip64=True) as zip_file:
-                    zip_file.write(file_path, arcname=arcname)
-                    current_zip_size += file_size
+# Create a Snowflake cursor
+cursor = conn.cursor()
 
-def process_csv(csv_file):
-    output_zip_template = f"{os.path.splitext(csv_file)[0]}_part{{}}.zip"
-    zip_files(csv_file, output_zip_template)
-    return f"Zipped {csv_file} into multiple parts"
+# Copy data from local file to Snowflake internal stage
+copy_query = f"COPY INTO @{stage_name} FROM '{local_file_path}' FILE_FORMAT=(TYPE='CSV' FIELD_OPTIONALLY_ENCLOSED_BY='\"')"
 
-if __name__ == "__main__":
-    csv_files = ["filelist1.csv", "filelist2.csv", "filelist3.csv"]  # Replace with your actual CSV files
+cursor.execute(copy_query)
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(process_csv, csv_files))
-
-    for result in results:
-        print(result)
-```
-
-In this version, the script now appends a part number to the zip file name (`output_zip_template`). When the cumulative size exceeds the limit, it starts a new zip file with an incremented part number. This way, files will be distributed across multiple zip files if the total size surpasses the specified threshold.
+# Close cursor and connection
+cursor.close()
+conn.close()
