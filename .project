@@ -29,10 +29,76 @@ conn = snowflake.connector.connect(
 cursor = conn.cursor()
 
 # Copy data from local file to Snowflake internal stage
-copy_query = f"COPY INTO @{stage_name} FROM '{local_file_path}' FILE_FORMAT=(TYPE='CSV' FIELD_OPTIONALLY_ENCLOSED_BY='\"')"
+copy
 
-cursor.execute(copy_query)
 
-# Close cursor and connection
-cursor.close()
-conn.close()
+
+
+
+
+
+Creating a program that generates random non-empty files and directories with valid English words can be quite involved. Below is a simple Python script using the `os`, `random`, and `string` modules to achieve this. Please make sure you have the required libraries installed (`random-word`, `json`, `csv`, `reportlab`).
+
+```python
+import os
+import random
+import string
+import json
+import csv
+from reportlab.pdfgen import canvas
+
+def generate_random_word():
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(random.randint(5, 10)))
+
+def create_text_file(path):
+    with open(path, 'w') as file:
+        file.write(generate_random_word())
+
+def create_csv_file(path):
+    with open(path, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([generate_random_word() for _ in range(3)])
+
+def create_json_file(path):
+    with open(path, 'w') as file:
+        json.dump({'data': generate_random_word()}, file)
+
+def create_pdf_file(path):
+    c = canvas.Canvas(path)
+    c.drawString(10, 800, generate_random_word())
+    c.save()
+
+def create_random_files_and_dirs(root_path, depth=5):
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
+
+    for _ in range(random.randint(2, 5)):
+        file_name = generate_random_word()
+        file_path = os.path.join(root_path, file_name)
+
+        file_type = random.choice(['txt', 'csv', 'json', 'pdf'])
+        file_path_with_extension = f"{file_path}.{file_type}"
+
+        if file_type == 'txt':
+            create_text_file(file_path_with_extension)
+        elif file_type == 'csv':
+            create_csv_file(file_path_with_extension)
+        elif file_type == 'json':
+            create_json_file(file_path_with_extension)
+        elif file_type == 'pdf':
+            create_pdf_file(file_path_with_extension)
+
+    if depth > 0:
+        for _ in range(random.randint(2, 5)):
+            dir_name = generate_random_word()
+            dir_path = os.path.join(root_path, dir_name)
+            create_random_files_and_dirs(dir_path, depth - 1)
+
+# Set the root directory for file generation
+root_directory = "generated_files"
+
+# Generate random files and directories
+create_random_files_and_dirs(root_directory)
+```
+
+This script generates a directory structure with random English words as file and directory names. It creates text, CSV, JSON, and PDF files with random content in each directory. Adjust the root_directory and file types as needed.
