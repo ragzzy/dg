@@ -1,104 +1,22 @@
-pip install snowflake-connector-python
-
-
-import snowflake.connector
-
-# Snowflake connection parameters
-account = 'your_account'
-user = 'your_user'
-password = 'your_password'
-warehouse = 'your_warehouse'
-database = 'your_database'
-schema = 'your_schema'
-stage_name = 'your_stage'
-
-# Local file path
-local_file_path = '/path/to/your/local/file.csv'
-
-# Snowflake connection
-conn = snowflake.connector.connect(
-    user=user,
-    password=password,
-    account=account,
-    warehouse=warehouse,
-    database=database,
-    schema=schema
-)
-
-# Create a Snowflake cursor
-cursor = conn.cursor()
-
-# Copy data from local file to Snowflake internal stage
-copy
-
-
-
-
-
-
-
-Creating a program that generates random non-empty files and directories with valid English words can be quite involved. Below is a simple Python script using the `os`, `random`, and `string` modules to achieve this. Please make sure you have the required libraries installed (`random-word`, `json`, `csv`, `reportlab`).
-
-```python
-import os
-import random
-import string
-import json
 import csv
-from reportlab.pdfgen import canvas
+import subprocess
 
-def generate_random_word():
-    return ''.join(random.choice(string.ascii_lowercase) for _ in range(random.randint(5, 10)))
+def compress_with_7zip(input_csv, output_zip):
+    with open(input_csv, 'r') as file:
+        reader = csv.reader(file)
+        files_to_compress = ' '.join(['"{}"'.format(row[0]) for row in reader])
 
-def create_text_file(path):
-    with open(path, 'w') as file:
-        file.write(generate_random_word())
+    # Run 7zip command for creating a ZIP archive
+    command = ['7z', 'a', '-tzip', output_zip] + files_to_compress.split()
+    process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-def create_csv_file(path):
-    with open(path, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([generate_random_word() for _ in range(3)])
+    # Check return code to determine if the process completed successfully
+    if process.returncode == 0:
+        print(f"ZIP archive creation completed successfully. Output: {output_zip}")
+    else:
+        print(f"ZIP archive creation failed. Error: {process.stderr.decode()}")
 
-def create_json_file(path):
-    with open(path, 'w') as file:
-        json.dump({'data': generate_random_word()}, file)
-
-def create_pdf_file(path):
-    c = canvas.Canvas(path)
-    c.drawString(10, 800, generate_random_word())
-    c.save()
-
-def create_random_files_and_dirs(root_path, depth=5):
-    if not os.path.exists(root_path):
-        os.makedirs(root_path)
-
-    for _ in range(random.randint(2, 5)):
-        file_name = generate_random_word()
-        file_path = os.path.join(root_path, file_name)
-
-        file_type = random.choice(['txt', 'csv', 'json', 'pdf'])
-        file_path_with_extension = f"{file_path}.{file_type}"
-
-        if file_type == 'txt':
-            create_text_file(file_path_with_extension)
-        elif file_type == 'csv':
-            create_csv_file(file_path_with_extension)
-        elif file_type == 'json':
-            create_json_file(file_path_with_extension)
-        elif file_type == 'pdf':
-            create_pdf_file(file_path_with_extension)
-
-    if depth > 0:
-        for _ in range(random.randint(2, 5)):
-            dir_name = generate_random_word()
-            dir_path = os.path.join(root_path, dir_name)
-            create_random_files_and_dirs(dir_path, depth - 1)
-
-# Set the root directory for file generation
-root_directory = "generated_files"
-
-# Generate random files and directories
-create_random_files_and_dirs(root_directory)
-```
-
-This script generates a directory structure with random English words as file and directory names. It creates text, CSV, JSON, and PDF files with random content in each directory. Adjust the root_directory and file types as needed.
+# Example usage
+input_csv = 'filelist.csv'
+output_zip = 'archive.zip'
+compress_with_7zip(input_csv, output_zip)
