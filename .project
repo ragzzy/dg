@@ -20,3 +20,31 @@ def compress_with_7zip(input_csv, output_zip):
 input_csv = 'filelist.csv'
 output_zip = 'archive.zip'
 compress_with_7zip(input_csv, output_zip)
+
+=====
+
+import csv
+import subprocess
+
+def compress_with_7zip(input_csv, output_zip):
+    with open(input_csv, 'r') as file:
+        reader = csv.reader(file)
+        
+        # Run 7zip command for creating a ZIP archive for each file
+        for row in reader:
+            file_to_compress = row[0]
+            command = ['7z', 'a', '-tzip', output_zip, file_to_compress]
+            process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            # Check return code to determine if the process completed successfully
+            if process.returncode == 0:
+                print(f"File '{file_to_compress}' added to ZIP archive.")
+            else:
+                print(f"Failed to add file '{file_to_compress}' to ZIP archive. Error: {process.stderr.decode()}")
+
+    print(f"All files processed. ZIP archive '{output_zip}' is ready.")
+
+# Example usage
+input_csv = 'filelist.csv'
+output_zip = 'archive.zip'
+compress_with_7zip(input_csv, output_zip)
