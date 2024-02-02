@@ -1,50 +1,80 @@
-import csv
-import subprocess
+import streamlit as st
+from datetime import datetime
 
-def compress_with_7zip(input_csv, output_zip):
-    with open(input_csv, 'r') as file:
-        reader = csv.reader(file)
-        files_to_compress = ' '.join(['"{}"'.format(row[0]) for row in reader])
+# Create a data structure to store employee information
+employees = []
 
-    # Run 7zip command for creating a ZIP archive
-    command = ['7z', 'a', '-tzip', output_zip] + files_to_compress.split()
-    process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+# Streamlit App
+def main():
+    st.title("Employee Certification Management")
 
-    # Check return code to determine if the process completed successfully
-    if process.returncode == 0:
-        print(f"ZIP archive creation completed successfully. Output: {output_zip}")
+    menu = ["Home", "Add Certification", "Remove Certification"]
+    choice = st.sidebar.selectbox("Menu", menu)
+
+    if choice == "Home":
+        show_home()
+    elif choice == "Add Certification":
+        add_certification()
+    elif choice == "Remove Certification":
+        remove_certification()
+
+# Function to display the home page
+def show_home():
+    st.header("Employee List with Certifications")
+    
+    if not employees:
+        st.info("No employees found. Add an employee and certifications.")
     else:
-        print(f"ZIP archive creation failed. Error: {process.stderr.decode()}")
+        for employee in employees:
+            st.write(f"**{employee['name']}**")
+            for certification in employee['certifications']:
+                st.write(f"- {certification['name']}: Expires on {certification['expiry_date']}")
 
-# Example usage
-input_csv = 'filelist.csv'
-output_zip = 'archive.zip'
-compress_with_7zip(input_csv, output_zip)
+# Function to add certification for an employee
+def add_certification():
+    st.header("Add Certification")
 
-=====
+    employee_name = st.text_input("Enter employee name:")
+    certification_name = st.text_input("Enter certification name:")
+    expiry_date = st.date_input("Certification Expiry Date:", datetime.today())
 
-import csv
-import subprocess
+    if st.button("Add Certification"):
+        employee = find_employee(employee_name)
 
-def compress_with_7zip(input_csv, output_zip):
-    with open(input_csv, 'r') as file:
-        reader = csv.reader(file)
-        
-        # Run 7zip command for creating a ZIP archive for each file
-        for row in reader:
-            file_to_compress = row[0]
-            command = ['7z', 'a', '-tzip', output_zip, file_to_compress]
-            process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if employee is not None:
+            certification = {
+                "name": certification_name,
+                "expiry_date": expiry_date.strftime("%Y-%m-%d")
+            }
+            employee['certifications'].append(certification)
+            st.success(f"Certification added for {employee_name}")
+        else:
+            st.warning(f"Employee {employee_name} not found. Add the employee first.")
 
-            # Check return code to determine if the process completed successfully
-            if process.returncode == 0:
-                print(f"File '{file_to_compress}' added to ZIP archive.")
-            else:
-                print(f"Failed to add file '{file_to_compress}' to ZIP archive. Error: {process.stderr.decode()}")
+# Function to remove certification for an employee
+def remove_certification():
+    st.header("Remove Certification")
 
-    print(f"All files processed. ZIP archive '{output_zip}' is ready.")
+    employee_name = st.text_input("Enter employee name:")
+    certification_name = st.text_input("Enter certification name:")
 
-# Example usage
-input_csv = 'filelist.csv'
-output_zip = 'archive.zip'
-compress_with_7zip(input_csv, output_zip)
+    if st.button("Remove Certification"):
+        employee = find_employee(employee_name)
+
+        if employee is not None:
+            certifications = employee['certifications']
+            certifications = [cert for cert in certifications if cert['name'] != certification_name]
+            employee['certifications'] = certifications
+            st.success(f"Certification removed for {employee_name}")
+        else:
+            st.warning(f"Employee {employee_name} not found.")
+
+# Helper function to find an employee by name
+def find_employee(name):
+    for employee in employees:
+        if employee['name'].lower() == name.lower():
+            return employee
+    return None
+
+if __name__ == "__main__":
+    main()
