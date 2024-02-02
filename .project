@@ -9,14 +9,10 @@ john.doe@example.com,Certification B,2025-06-30
 jane.smith@example.com,Certification C,2023-08-15
 
 import streamlit as st
-import pandas as pd
 from datetime import datetime
 
-# Load employee data from CSV
-employees_df = pd.read_csv('employees.csv')
-
-# Load certifications data from CSV
-certifications_df = pd.read_csv('certifications.csv')
+# Create a data structure to store employee information
+employees = []
 
 # User authentication
 authenticated_user = None
@@ -59,59 +55,81 @@ def main():
 # Function to display the home page
 def show_home():
     st.header("Employee List with Certifications")
-
-    # Display the employee data
-    st.write("**Employee Data**")
-    st.write(employees_df)
-
-    # Display the certifications data
-    st.write("**Certifications Data**")
-    st.write(certifications_df)
+    
+    if not employees:
+        st.info("No employees found. Add an employee and certifications.")
+    else:
+        for employee in employees:
+            st.write(f"**{employee['name']}**")
+            for certification in employee['certifications']:
+                st.write(f"- {certification['name']}: Expires on {certification['expiry_date']}")
 
 # Function to add certification for an employee
 def add_certification():
     st.header("Add Certification")
 
+    employee_name = authenticated_user['name']
     certification_name = st.text_input("Enter certification name:")
     expiry_date = st.date_input("Certification Expiry Date:", datetime.today())
 
     if st.button("Add Certification"):
-        email = authenticated_user['email']
-        certification_data = {'email': email, 'certification_name': certification_name, 'expiry_date': expiry_date.strftime("%Y-%m-%d")}
-        certifications_df = pd.concat([certifications_df, pd.DataFrame([certification_data])], ignore_index=True)
-        certifications_df.to_csv('certifications.csv', index=False)
-        st.success(f"Certification added for {authenticated_user['name']}")
+        employee = find_employee(employee_name)
+
+        if employee is not None:
+            certification = {
+                "name": certification_name,
+                "expiry_date": expiry_date.strftime("%Y-%m-%d")
+            }
+            employee['certifications'].append(certification)
+            st.success(f"Certification added for {employee_name}")
+        else:
+            st.warning(f"Employee {employee_name} not found.")
 
 # Function to remove certification for an employee
 def remove_certification():
     st.header("Remove Certification")
 
+    employee_name = authenticated_user['name']
     certification_name = st.text_input("Enter certification name:")
 
     if st.button("Remove Certification"):
-        email = authenticated_user['email']
-        certifications_df.drop(certifications_df[(certifications_df['email'] == email) & (certifications_df['certification_name'] == certification_name)].index, inplace=True)
-        certifications_df.to_csv('certifications.csv', index=False)
-        st.success(f"Certification removed for {authenticated_user['name']}")
+        employee = find_employee(employee_name)
+
+        if employee is not None:
+            certifications = employee['certifications']
+            certifications = [cert for cert in certifications if cert['name'] != certification_name]
+            employee['certifications'] = certifications
+            st.success(f"Certification removed for {employee_name}")
+        else:
+            st.warning(f"Employee {employee_name} not found.")
 
 # Function to view certifications for the authenticated employee
 def view_certifications():
     st.header("View Certifications")
 
-    email = authenticated_user['email']
-    user_certifications = certifications_df[certifications_df['email'] == email]
+    employee_name = authenticated_user['name']
+    employee = find_employee(employee_name)
 
-    if not user_certifications.empty:
-        st.write(f"**{authenticated_user['name']}'s Certifications**")
-        st.write(user_certifications[['certification_name', 'expiry_date']])
+    if employee is not None:
+        st.write(f"**{employee['name']}'s Certifications**")
+        for certification in employee['certifications']:
+            st.write(f"- {certification['name']}: Expires on {certification['expiry_date']}")
     else:
-        st.warning(f"No certifications found for {authenticated_user['name']}.")
+        st.warning(f"Employee {employee_name} not found.")
+
+# Helper function to find an employee by name
+def find_employee(name):
+    for employee in employees:
+        if employee['name'].lower() == name.lower():
+            return employee
+    return None
 
 # Helper function for user authentication
 def authenticate_user(username, password):
-    user = employees_df[(employees_df['username'] == username) & (employees_df['password'] == password)]
-    if not user.empty:
-        return user.to_dict(orient='records')[0]
+    # Replace this with a more secure authentication mechanism
+    for employee in employees:
+        if employee['username'] == username and employee['password'] == password:
+            return employee
     return None
 
 if __name__ == "__main__":
