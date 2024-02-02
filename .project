@@ -104,18 +104,18 @@ def remove_certification():
             st.warning(f"Employee {employee_name} not found.")
 
 # Function to view certifications for the authenticated employee
+# Function to view certifications for the authenticated employee
 def view_certifications():
     st.header("View Certifications")
 
-    employee_name = authenticated_user['name']
-    employee = find_employee(employee_name)
+    email = authenticated_user['email']
+    user_certifications = certifications_df[certifications_df['email'] == email]
 
-    if employee is not None:
-        st.write(f"**{employee['name']}'s Certifications**")
-        for certification in employee['certifications']:
-            st.write(f"- {certification['name']}: Expires on {certification['expiry_date']}")
+    if not user_certifications.empty:
+        st.write(f"**{authenticated_user['name']}'s Certifications**")
+        st.write(user_certifications[['certification_name', 'expiry_date']])
     else:
-        st.warning(f"Employee {employee_name} not found.")
+        st.warning(f"No certifications found for {authenticated_user['name']}.")
 
 # Helper function to find an employee by name
 def find_employee(name):
