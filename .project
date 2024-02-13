@@ -1,136 +1,48 @@
-name,email,username,password
-John Doe,john.doe@example.com,johndoe,johndoe_password
-Jane Smith,jane.smith@example.com,janesmith,janesmith_password
+import pandas as pd
+import os
 
+# Read the TSV file into a pandas DataFrame
+df = pd.read_csv('file_paths.tsv', sep='\t')
 
-email,certification_name,expiry_date
-john.doe@example.com,Certification A,2024-12-31
-john.doe@example.com,Certification B,2025-06-30
-jane.smith@example.com,Certification C,2023-08-15
+# Define the maximum number of file paths per CSV file
+max_file_paths = 10
 
-import streamlit as st
-from datetime import datetime
+# Define the maximum total file size per CSV file
+max_total_file_size = 1000000  # Assuming in bytes
 
-# Create a data structure to store employee information
-employees = []
+# Initialize variables to keep track of current file paths and total file size
+current_file_paths = []
+current_total_file_size = 0
+csv_index = 1
 
-# User authentication
-authenticated_user = None
+# Function to create a new CSV file with current file paths
+def create_csv(file_paths):
+    global csv_index
+    df_subset = df[df['file_path'].isin(file_paths)]
+    df_subset.to_csv(f'output_{csv_index}.csv', index=False)
+    csv_index += 1
 
-# Streamlit App
-def main():
-    global authenticated_user
+# Iterate through each row in the DataFrame
+for index, row in df.iterrows():
+    file_path = row['file_path']
+    file_size = row['file_size']
 
-    st.title("Employee Certification Management")
+    # Check if adding the current file path exceeds the maximum total file size
+    if (current_total_file_size + file_size) > max_total_file_size:
+        create_csv(current_file_paths)
+        current_file_paths = []
+        current_total_file_size = 0
 
-    # Simple authentication mechanism
-    if authenticated_user is None:
-        username = st.text_input("Username:")
-        password = st.text_input("Password:", type="password")
+    # Add the current file path to the list
+    current_file_paths.append(file_path)
+    current_total_file_size += file_size
 
-        if st.button("Login"):
-            authenticated_user = authenticate_user(username, password)
-            if authenticated_user is None:
-                st.warning("Invalid credentials. Please try again.")
-            else:
-                st.success(f"Welcome, {authenticated_user['name']}!")
+    # Check if the maximum number of file paths per CSV file is reached
+    if len(current_file_paths) >= max_file_paths:
+        create_csv(current_file_paths)
+        current_file_paths = []
+        current_total_file_size = 0
 
-    if authenticated_user:
-        st.sidebar.markdown(f"Logged in as: {authenticated_user['name']}")
-        menu = ["Home", "Add Certification", "Remove Certification", "View Certifications", "Logout"]
-        choice = st.sidebar.selectbox("Menu", menu)
-
-        if choice == "Home":
-            show_home()
-        elif choice == "Add Certification":
-            add_certification()
-        elif choice == "Remove Certification":
-            remove_certification()
-        elif choice == "View Certifications":
-            view_certifications()
-        elif choice == "Logout":
-            authenticated_user = None
-            st.success("Logged out successfully.")
-
-# Function to display the home page
-def show_home():
-    st.header("Employee List with Certifications")
-    
-    if not employees:
-        st.info("No employees found. Add an employee and certifications.")
-    else:
-        for employee in employees:
-            st.write(f"**{employee['name']}**")
-            for certification in employee['certifications']:
-                st.write(f"- {certification['name']}: Expires on {certification['expiry_date']}")
-
-# Function to add certification for an employee
-def add_certification():
-    st.header("Add Certification")
-
-    employee_name = authenticated_user['name']
-    certification_name = st.text_input("Enter certification name:")
-    expiry_date = st.date_input("Certification Expiry Date:", datetime.today())
-
-    if st.button("Add Certification"):
-        employee = find_employee(employee_name)
-
-        if employee is not None:
-            certification = {
-                "name": certification_name,
-                "expiry_date": expiry_date.strftime("%Y-%m-%d")
-            }
-            employee['certifications'].append(certification)
-            st.success(f"Certification added for {employee_name}")
-        else:
-            st.warning(f"Employee {employee_name} not found.")
-
-# Function to remove certification for an employee
-def remove_certification():
-    st.header("Remove Certification")
-
-    employee_name = authenticated_user['name']
-    certification_name = st.text_input("Enter certification name:")
-
-    if st.button("Remove Certification"):
-        employee = find_employee(employee_name)
-
-        if employee is not None:
-            certifications = employee['certifications']
-            certifications = [cert for cert in certifications if cert['name'] != certification_name]
-            employee['certifications'] = certifications
-            st.success(f"Certification removed for {employee_name}")
-        else:
-            st.warning(f"Employee {employee_name} not found.")
-
-# Function to view certifications for the authenticated employee
-# Function to view certifications for the authenticated employee
-def view_certifications():
-    st.header("View Certifications")
-
-    email = authenticated_user['email']
-    user_certifications = certifications_df[certifications_df['email'] == email]
-
-    if not user_certifications.empty:
-        st.write(f"**{authenticated_user['name']}'s Certifications**")
-        st.write(user_certifications[['certification_name', 'expiry_date']])
-    else:
-        st.warning(f"No certifications found for {authenticated_user['name']}.")
-
-# Helper function to find an employee by name
-def find_employee(name):
-    for employee in employees:
-        if employee['name'].lower() == name.lower():
-            return employee
-    return None
-
-# Helper function for user authentication
-def authenticate_user(username, password):
-    # Replace this with a more secure authentication mechanism
-    for employee in employees:
-        if employee['username'] == username and employee['password'] == password:
-            return employee
-    return None
-
-if __name__ == "__main__":
-    main()
+# Create a CSV file for the remaining file paths
+if current_file_paths:
+    create_csv(current_file_paths)
