@@ -1,7 +1,8 @@
 # Function to recursively search for PST files and check for corresponding TRG files
 function FindMatchingFiles {
     param(
-        [string]$Path
+        [string]$Path,
+        [ref]$MatchedFiles
     )
 
     # Get all PST files in the current directory
@@ -12,21 +13,68 @@ function FindMatchingFiles {
         # Check if a TRG file with the same name exists in the same directory
         $trgFile = Get-ChildItem -Path $pstFile.Directory.FullName -Filter ($pstFile.BaseName + ".trg") -File
 
-        # If a matching TRG file exists, output the path of the PST file
+        # If a matching TRG file exists, add the path of the PST file to the list
         if ($trgFile) {
-            Write-Output $pstFile.FullName
+            $MatchedFiles.Value += $pstFile.FullName
         }
     }
 
     # Recursively search subdirectories
     $subDirectories = Get-ChildItem -Path $Path -Directory
     foreach ($directory in $subDirectories) {
-        FindMatchingFiles -Path $directory.FullName
+        FindMatchingFiles -Path $directory.FullName -MatchedFiles $MatchedFiles
     }
 }
 
 # Starting directory for the search
 $startingDirectory = "C:\path\to\search"
 
+# Initialize list to store matched file paths
+$matchedFilesList = @()
+
 # Call the function to start the search
-FindMatchingFiles -Path $startingDirectory
+FindMatchingFiles -Path $startingDirectory -MatchedFiles ([ref]$matchedFilesList)
+
+# Output the list of matched file paths
+return $matchedFilesList
+
+
+
+# Function to iterate through the list of PST files and perform AzCopy, delete, and rename operations
+function ProcessPstFiles {
+    param(
+        [array]$PstFilesList
+    )
+
+    foreach ($pstFile in $PstFilesList) {
+        # Construct AzCopy command
+        $azCopyCommand = "azcopy copy `"$pstFile`" `"<destination_path>`" --recursive=true"
+
+        # Execute AzCopy command
+        Write-Host "Executing AzCopy command: $azCopyCommand"
+        Invoke-Expression $azCopyCommand
+
+        # Delete PST file
+        Remove-Item -Path $pstFile -Force
+        Write-Host "Deleted PST file: $pstFile"
+
+        # Get TRG file path
+        $trgFile = $pstFile -replace ".pst$", ".trg"
+        $trgFilePath = $trgFile.FullName
+
+        # Rename TRG file to "done"
+        $trgFilePathNew = $trgFilePath -replace ".trg$", ".done"
+        Rename-Item -Path $trgFilePath -NewName $trgFilePathNew
+        Write-Host "Renamed TRG file to 'done': $trgFilePathNew"
+    }
+}
+
+# List of PST files returned from the previous step
+$matchedPstFilesList = @(
+    "C:\path\to\file1.pst",
+    "C:\path\to\file2.pst",
+    # Add more PST file paths as needed
+)
+
+# Call function to process PST files
+ProcessPstFiles -PstFilesList $matchedPstFilesList
