@@ -1,48 +1,32 @@
-import pandas as pd
-import os
+# Function to recursively search for PST files and check for corresponding TRG files
+function FindMatchingFiles {
+    param(
+        [string]$Path
+    )
 
-# Read the TSV file into a pandas DataFrame
-df = pd.read_csv('file_paths.tsv', sep='\t')
+    # Get all PST files in the current directory
+    $pstFiles = Get-ChildItem -Path $Path -Filter *.pst -File
 
-# Define the maximum number of file paths per CSV file
-max_file_paths = 10
+    # Loop through each PST file
+    foreach ($pstFile in $pstFiles) {
+        # Check if a TRG file with the same name exists in the same directory
+        $trgFile = Get-ChildItem -Path $pstFile.Directory.FullName -Filter ($pstFile.BaseName + ".trg") -File
 
-# Define the maximum total file size per CSV file
-max_total_file_size = 1000000  # Assuming in bytes
+        # If a matching TRG file exists, output the path of the PST file
+        if ($trgFile) {
+            Write-Output $pstFile.FullName
+        }
+    }
 
-# Initialize variables to keep track of current file paths and total file size
-current_file_paths = []
-current_total_file_size = 0
-csv_index = 1
+    # Recursively search subdirectories
+    $subDirectories = Get-ChildItem -Path $Path -Directory
+    foreach ($directory in $subDirectories) {
+        FindMatchingFiles -Path $directory.FullName
+    }
+}
 
-# Function to create a new CSV file with current file paths
-def create_csv(file_paths):
-    global csv_index
-    df_subset = df[df['file_path'].isin(file_paths)]
-    df_subset.to_csv(f'output_{csv_index}.csv', index=False)
-    csv_index += 1
+# Starting directory for the search
+$startingDirectory = "C:\path\to\search"
 
-# Iterate through each row in the DataFrame
-for index, row in df.iterrows():
-    file_path = row['file_path']
-    file_size = row['file_size']
-
-    # Check if adding the current file path exceeds the maximum total file size
-    if (current_total_file_size + file_size) > max_total_file_size:
-        create_csv(current_file_paths)
-        current_file_paths = []
-        current_total_file_size = 0
-
-    # Add the current file path to the list
-    current_file_paths.append(file_path)
-    current_total_file_size += file_size
-
-    # Check if the maximum number of file paths per CSV file is reached
-    if len(current_file_paths) >= max_file_paths:
-        create_csv(current_file_paths)
-        current_file_paths = []
-        current_total_file_size = 0
-
-# Create a CSV file for the remaining file paths
-if current_file_paths:
-    create_csv(current_file_paths)
+# Call the function to start the search
+FindMatchingFiles -Path $startingDirectory
