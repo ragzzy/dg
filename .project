@@ -1,98 +1,48 @@
-import streamlit as st
-import sqlite3
+import json
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType
 
-# Function to initialize the database
-def initialize_db():
-    conn = sqlite3.connect('certifications.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS employees (
-                    id INTEGER PRIMARY KEY,
-                    name TEXT NOT NULL
-                 )''')
+json_data = {
+    'TYPE' : 'D',
+    'DELIMITER' : '|',
+    'HASHEADER' : True,
+    'COLUMNS': [ 
+        { 'ABC123' : { 'COLUMN_SIZE' : None, 'COLUMN_SEQUENCE' : 1, 'ALGORITHM' : None } }, 
+        { 'XYZ456' : { 'COLUMN_SIZE' : None, 'COLUMN_SEQUENCE' : 2, 'ALGORITHM' : '233-SCRAMBLE-1' } } 
+    ]
+}
 
-    c.execute('''CREATE TABLE IF NOT EXISTS certifications (
-                    id INTEGER PRIMARY KEY,
-                    employee_id INTEGER,
-                    certification_name TEXT NOT NULL,
-                    date_obtained TEXT,
-                    FOREIGN KEY (employee_id) REFERENCES employees(id)
-                 )''')
+# Extracting the delimiter
+delimiter = json_data['DELIMITER']
 
-    conn.commit()
-    conn.close()
+# Extracting columns information and constructing the schema
+columns_info = json_data['COLUMNS']
+columns = []
+for col_info in columns_info:
+    for col_name, col_details in col_info.items():
+        columns.append((col_name, col_details['COLUMN_SEQUENCE']))
 
-# Function to add employee
-def add_employee(name):
-    conn = sqlite3.connect('certifications.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO employees (name) VALUES (?)", (name,))
-    conn.commit()
-    conn.close()
+# Sorting columns based on COLUMN_SEQUENCE
+columns = sorted(columns, key=lambda x: x[1])
 
-# Function to add certification
-def add_certification(employee_id, certification_name, date_obtained):
-    conn = sqlite3.connect('certifications.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO certifications (employee_id, certification_name, date_obtained) VALUES (?, ?, ?)",
-              (employee_id, certification_name, date_obtained))
-    conn.commit()
-    conn.close()
+# Extract column names in the correct sequence
+column_names = [col[0] for col in columns]
 
-# Function to view certifications
-def view_certifications(employee_id):
-    conn = sqlite3.connect('certifications.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM certifications WHERE employee_id=?", (employee_id,))
-    certifications = c.fetchall()
-    conn.close()
-    return certifications
+# Construct the schema
+schema = StructType([StructField(col_name, StringType(), True) for col_name in column_names])
 
-# Main function to run the Streamlit app
-def main():
-    st.title("Employee Certifications Tracker")
+# Initialize Spark session
+spark = SparkSession.builder.appName("Ingest JSON Data").getOrCreate()
 
-    initialize_db()
+# Define the path to the data file
+data_file_path = "path/to/your/data.txt"
 
-    menu = st.sidebar.selectbox("Menu", ["Home", "Add Employee", "Add Certification", "View Certifications"])
+# Read the data file
+df = spark.read.format("csv") \
+    .option("delimiter", delimiter) \
+    .option("header", json_data['HASHEADER']) \
+    .schema(schema) \
+    .load(data_file_path)
 
-    if menu == "Home":
-        st.write("Welcome to the Employee Certifications Tracker. Use the sidebar to navigate.")
-
-    elif menu == "Add Employee":
-        st.subheader("Add Employee")
-        name = st.text_input("Enter employee name:")
-        if st.button("Add"):
-            if name:
-                add_employee(name)
-                st.success("Employee added successfully!")
-            else:
-                st.warning("Please enter a name for the employee.")
-
-    elif menu == "Add Certification":
-        st.subheader("Add Certification")
-        employee_id = st.text_input("Enter employee ID:")
-        certification_name = st.text_input("Enter certification name:")
-        date_obtained = st.text_input("Enter date obtained (YYYY-MM-DD):")
-        if st.button("Add"):
-            if employee_id and certification_name and date_obtained:
-                add_certification(employee_id, certification_name, date_obtained)
-                st.success("Certification added successfully!")
-            else:
-                st.warning("Please fill in all fields.")
-
-    elif menu == "View Certifications":
-        st.subheader("View Certifications")
-        employee_id = st.text_input("Enter employee ID:")
-        if st.button("View"):
-            if employee_id:
-                certifications = view_certifications(employee_id)
-                if certifications:
-                    for certification in certifications:
-                        st.write(certification)
-                else:
-                    st.warning("No certifications found for this employee.")
-            else:
-                st.warning("Please enter an employee ID.")
-
-if __name__ == "__main__":
-    main()
+# Show the DataFrame
+df.show()
