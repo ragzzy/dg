@@ -1,48 +1,38 @@
-import json
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType
-
-json_data = {
-    'TYPE' : 'D',
-    'DELIMITER' : '|',
-    'HASHEADER' : True,
-    'COLUMNS': [ 
-        { 'ABC123' : { 'COLUMN_SIZE' : None, 'COLUMN_SEQUENCE' : 1, 'ALGORITHM' : None } }, 
-        { 'XYZ456' : { 'COLUMN_SIZE' : None, 'COLUMN_SEQUENCE' : 2, 'ALGORITHM' : '233-SCRAMBLE-1' } } 
-    ]
-}
-
-# Extracting the delimiter
-delimiter = json_data['DELIMITER']
-
-# Extracting columns information and constructing the schema
-columns_info = json_data['COLUMNS']
-columns = []
-for col_info in columns_info:
-    for col_name, col_details in col_info.items():
-        columns.append((col_name, col_details['COLUMN_SEQUENCE']))
-
-# Sorting columns based on COLUMN_SEQUENCE
-columns = sorted(columns, key=lambda x: x[1])
-
-# Extract column names in the correct sequence
-column_names = [col[0] for col in columns]
-
-# Construct the schema
-schema = StructType([StructField(col_name, StringType(), True) for col_name in column_names])
+from pyspark.sql.functions import monotonically_increasing_id, col, when
 
 # Initialize Spark session
-spark = SparkSession.builder.appName("Ingest JSON Data").getOrCreate()
+spark = SparkSession.builder.appName("RowLevelComparison").getOrCreate()
 
-# Define the path to the data file
-data_file_path = "path/to/your/data.txt"
+# Load the files into DataFrames
+file1 = "path/to/first/file.csv"
+file2 = "path/to/second/file.csv"
 
-# Read the data file
-df = spark.read.format("csv") \
-    .option("delimiter", delimiter) \
-    .option("header", json_data['HASHEADER']) \
-    .schema(schema) \
-    .load(data_file_path)
+df1 = spark.read.csv(file1, header=True, inferSchema=True)
+df2 = spark.read.csv(file2, header=True, inferSchema=True)
 
-# Show the DataFrame
-df.show()
+# Add row index to each DataFrame
+df1 = df1.withColumn("row_index", monotonically_increasing_id())
+df2 = df2.withColumn("row_index", monotonically_increasing_id())
+
+# Join the DataFrames on the row index
+joined_df = df1.join(df2, df1.row_index == df2.row_index, "inner") \
+               .select(df1["*"], df2["*"])
+
+# Select the columns you want to compare
+selected_columns = ["columnA", "columnB"]
+for col in selected_columns:
+    joined_df = joined_df.withColumnRenamed(f"{col}", f"{col}_file1") \
+                         .withColumnRenamed(f"{col}_2", f"{col}_file2")
+
+# Perform the comparison
+comparison_df = joined_df.withColumn(
+    "comparison_result",
+    when(
+        (col("columnA_file1") == col("columnA_file2")) & (col("columnB_file1") == col("columnB_file2")),
+        "Match"
+    ).otherwise("Mismatch")
+)
+
+# Show the result
+comparison_df.select("row_index", "columnA_file1", "columnA_file2", "columnB_file1", "columnB_file2", "comparison_result").show()
