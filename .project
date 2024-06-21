@@ -1,38 +1,56 @@
+# Step 1: Install Great Expectations
+%pip install great_expectations
+
+# Step 2: Initialize Great Expectations
+import great_expectations as ge
+from great_expectations.core.batch import BatchRequest
+
+context = ge.data_context.DataContext()
+
+# Step 3: Create a Spark DataFrame
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import monotonically_increasing_id, col, when
 
-# Initialize Spark session
-spark = SparkSession.builder.appName("RowLevelComparison").getOrCreate()
+spark = SparkSession.builder.appName("GreatExpectationsExample").getOrCreate()
 
-# Load the files into DataFrames
-file1 = "path/to/first/file.csv"
-file2 = "path/to/second/file.csv"
+data = [("Alice", "12345", "2021-06-20"), ("Bob", "67890", "2023-05-18"), ("Charlie", "ABCDE", "2022-12-25")]
+columns = ["name", "code", "date"]
+df = spark.createDataFrame(data, columns)
+df.createOrReplaceTempView("my_temp_table")
 
-df1 = spark.read.csv(file1, header=True, inferSchema=True)
-df2 = spark.read.csv(file2, header=True, inferSchema=True)
+# Step 4: Create Expectations Suite
+expectation_suite_name = "example_suite"
+context.create_expectation_suite(expectation_suite_name, overwrite_existing=True)
 
-# Add row index to each DataFrame
-df1 = df1.withColumn("row_index", monotonically_increasing_id())
-df2 = df2.withColumn("row_index", monotonically_increasing_id())
-
-# Join the DataFrames on the row index
-joined_df = df1.join(df2, df1.row_index == df2.row_index, "inner") \
-               .select(df1["*"], df2["*"])
-
-# Select the columns you want to compare
-selected_columns = ["columnA", "columnB"]
-for col in selected_columns:
-    joined_df = joined_df.withColumnRenamed(f"{col}", f"{col}_file1") \
-                         .withColumnRenamed(f"{col}_2", f"{col}_file2")
-
-# Perform the comparison
-comparison_df = joined_df.withColumn(
-    "comparison_result",
-    when(
-        (col("columnA_file1") == col("columnA_file2")) & (col("columnB_file1") == col("columnB_file2")),
-        "Match"
-    ).otherwise("Mismatch")
+batch_request = BatchRequest(
+    datasource_name="spark",
+    data_connector_name="default_inferred_data_connector_name",
+    data_asset_name="my_temp_table",
 )
 
-# Show the result
-comparison_df.select("row_index", "columnA_file1", "columnA_file2", "columnB_file1", "columnB_file2", "comparison_result").show()
+validator = context.get_validator(batch_request=batch_request, expectation_suite_name=expectation_suite_name)
+
+# Define expectations
+validator.expect_column_to_exist("code")
+validator.expect_column_value_lengths_to_be_between("code", min_value=5, max_value=5)
+validator.expect_column_values_to_be_of_type("code", "StringType")
+
+# Expectation for the date format (assuming the format is 'yyyy-MM-dd')
+validator.expect_column_values_to_match_regex("date", r"\d{4}-\d{2}-\d{2}")
+
+validator.save_expectation_suite()
+
+# Step 5: Validate DataFrame
+results = validator.validate()
+
+# Step 6: Save Results to a Delta Table
+# Convert validation results to a Pandas DataFrame
+results_df = ge.dataset.PandasDataset(results.to_json_dict())
+
+# Convert the results to a Spark DataFrame
+results_spark_df = spark.createDataFrame(results_df)
+
+# Write the Spark DataFrame to a Delta table
+results_spark_df.write.format("delta").mode("overwrite").save("/path/to/delta/table")
+
+# Alternatively, you can use a table name instead of a path
+results_spark_df.write.format("delta").mode("overwrite").saveAsTable("great_expectations_results")
