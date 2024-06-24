@@ -1,56 +1,42 @@
-# Step 1: Install Great Expectations
 %pip install great_expectations
-
-# Step 2: Initialize Great Expectations
 import great_expectations as ge
 from great_expectations.core.batch import BatchRequest
 
-context = ge.data_context.DataContext()
+# Initialize a DataContext
+context = ge.get_context()
 
-# Step 3: Create a Spark DataFrame
-from pyspark.sql import SparkSession
+df1 = spark.read.format("csv").option("header", "true").load("path_to_first_dataframe.csv")
+df2 = spark.read.format("csv").option("header", "true").load("path_to_second_dataframe.csv")
 
-spark = SparkSession.builder.appName("GreatExpectationsExample").getOrCreate()
+import great_expectations.dataset.sparkdf_dataset
 
-data = [("Alice", "12345", "2021-06-20"), ("Bob", "67890", "2023-05-18"), ("Charlie", "ABCDE", "2022-12-25")]
-columns = ["name", "code", "date"]
-df = spark.createDataFrame(data, columns)
-df.createOrReplaceTempView("my_temp_table")
+ge_df1 = ge.dataset.SparkDFDataset(df1)
+ge_df2 = ge.dataset.SparkDFDataset(df2)
 
-# Step 4: Create Expectations Suite
-expectation_suite_name = "example_suite"
-context.create_expectation_suite(expectation_suite_name, overwrite_existing=True)
+# Expect column1 to have the same values in both DataFrames
+expectation_suite_name = "column_comparison_suite"
 
+# Create a new expectation suite
+suite = context.create_expectation_suite(expectation_suite_name, overwrite_existing=True)
+
+# Add expectations for the columns in the first DataFrame
+ge_df1.expect_column_values_to_be_in_set("column1", set(df2.select("column1").rdd.flatMap(lambda x: x).collect()))
+ge_df1.expect_column_values_to_be_in_set("column2", set(df2.select("column2").rdd.flatMap(lambda x: x).collect()))
+
+# Save the expectation suite
+context.save_expectation_suite(expectation_suite=suite, expectation_suite_name=expectation_suite_name)
+
+# Run validation on the first DataFrame
 batch_request = BatchRequest(
-    datasource_name="spark",
+    datasource_name="spark_df",
     data_connector_name="default_inferred_data_connector_name",
-    data_asset_name="my_temp_table",
+    data_asset_name="ge_df1",
 )
 
-validator = context.get_validator(batch_request=batch_request, expectation_suite_name=expectation_suite_name)
+results = context.run_validation_operator(
+    "action_list_operator", assets_to_validate=[ge_df1], run_id="column_comparison_run"
+)
 
-# Define expectations
-validator.expect_column_to_exist("code")
-validator.expect_column_value_lengths_to_be_between("code", min_value=5, max_value=5)
-validator.expect_column_values_to_be_of_type("code", "StringType")
-
-# Expectation for the date format (assuming the format is 'yyyy-MM-dd')
-validator.expect_column_values_to_match_regex("date", r"\d{4}-\d{2}-\d{2}")
-
-validator.save_expectation_suite()
-
-# Step 5: Validate DataFrame
-results = validator.validate()
-
-# Step 6: Save Results to a Delta Table
-# Convert validation results to a Pandas DataFrame
-results_df = ge.dataset.PandasDataset(results.to_json_dict())
-
-# Convert the results to a Spark DataFrame
-results_spark_df = spark.createDataFrame(results_df)
-
-# Write the Spark DataFrame to a Delta table
-results_spark_df.write.format("delta").mode("overwrite").save("/path/to/delta/table")
-
-# Alternatively, you can use a table name instead of a path
-results_spark_df.write.format("delta").mode("overwrite").saveAsTable("great_expectations_results")
+# Print validation results
+validation_result = results.list_validation_results()[0]
+validation_result
