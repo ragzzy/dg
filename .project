@@ -1,42 +1,48 @@
-%pip install great_expectations
-import great_expectations as ge
-from great_expectations.core.batch import BatchRequest
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import max
 
-# Initialize a DataContext
-context = ge.get_context()
+# Initialize SparkSession
+spark = SparkSession.builder.appName("LatestDate").getOrCreate()
 
-df1 = spark.read.format("csv").option("header", "true").load("path_to_first_dataframe.csv")
-df2 = spark.read.format("csv").option("header", "true").load("path_to_second_dataframe.csv")
+# Sample data
+data = [
+    ("A", "X", "2023-01-01"),
+    ("A", "X", "2023-02-01"),
+    ("A", "Y", "2023-03-01"),
+    ("B", "X", "2023-04-01"),
+    ("B", "X", "2023-05-01"),
+    ("B", "Y", "2023-06-01"),
+]
 
-import great_expectations.dataset.sparkdf_dataset
+# Create DataFrame
+columns = ["col1", "col2", "col3"]
+df = spark.createDataFrame(data, columns)
 
-ge_df1 = ge.dataset.SparkDFDataset(df1)
-ge_df2 = ge.dataset.SparkDFDataset(df2)
+# Convert col3 to date type for proper comparison
+df = df.withColumn("col3", df["col3"].cast("date"))
 
-# Expect column1 to have the same values in both DataFrames
-expectation_suite_name = "column_comparison_suite"
+# Get the latest date for each (col1, col2) group
+result_df = df.groupBy("col1", "col2").agg(max("col3").alias("latest_date"))
 
-# Create a new expectation suite
-suite = context.create_expectation_suite(expectation_suite_name, overwrite_existing=True)
+# Join back to get the original rows with the latest date
+final_df = df.join(result_df, (df["col1"] == result_df["col1"]) & (df["col2"] == result_df["col2"]) & (df["col3"] == result_df["latest_date"]))\
+             .select(df["col1"], df["col2"], df["col3"])
 
-# Add expectations for the columns in the first DataFrame
-ge_df1.expect_column_values_to_be_in_set("column1", set(df2.select("column1").rdd.flatMap(lambda x: x).collect()))
-ge_df1.expect_column_values_to_be_in_set("column2", set(df2.select("column2").rdd.flatMap(lambda x: x).collect()))
+# Show the result
+final_df.show()
 
-# Save the expectation suite
-context.save_expectation_suite(expectation_suite=suite, expectation_suite_name=expectation_suite_name)
+# Save the final DataFrame to a Delta table partitioned by col3
+final_df.write.format("delta").mode("overwrite").partitionBy("col3").save("/path/to/delta-table")
 
-# Run validation on the first DataFrame
-batch_request = BatchRequest(
-    datasource_name="spark_df",
-    data_connector_name="default_inferred_data_connector_name",
-    data_asset_name="ge_df1",
-)
+# Read the Delta table
+delta_df = spark.read.format("delta").load("/path/to/delta-table")
 
-results = context.run_validation_operator(
-    "action_list_operator", assets_to_validate=[ge_df1], run_id="column_comparison_run"
-)
+# Get the latest date for each (col1, col2) group
+latest_df = delta_df.groupBy("col1", "col2").agg(max("col3").alias("latest_date"))
 
-# Print validation results
-validation_result = results.list_validation_results()[0]
-validation_result
+# Join back to get the original rows with the latest date
+result_df = delta_df.join(latest_df, (delta_df["col1"] == latest_df["col1"]) & (delta_df["col2"] == latest_df["col2"]) & (delta_df["col3"] == latest_df["latest_date"]))\
+                    .select(delta_df["col1"], delta_df["col2"], delta_df["col3"])
+
+# Show the result
+result_df.show()
