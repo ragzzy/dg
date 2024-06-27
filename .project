@@ -1,48 +1,23 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import max
+from pyspark.sql.functions import monotonically_increasing_id, col
 
-# Initialize SparkSession
-spark = SparkSession.builder.appName("LatestDate").getOrCreate()
+# Initialize Spark session
+spark = SparkSession.builder.appName("AddRowNumber").getOrCreate()
 
-# Sample data
-data = [
-    ("A", "X", "2023-01-01"),
-    ("A", "X", "2023-02-01"),
-    ("A", "Y", "2023-03-01"),
-    ("B", "X", "2023-04-01"),
-    ("B", "X", "2023-05-01"),
-    ("B", "Y", "2023-06-01"),
-]
+# Read the file into a DataFrame
+df = spark.read.csv('/path/to/your/file.csv', header=True, inferSchema=True)
 
-# Create DataFrame
-columns = ["col1", "col2", "col3"]
-df = spark.createDataFrame(data, columns)
+# Add a monotonically increasing ID column
+df_with_id = df.withColumn('id', monotonically_increasing_id())
 
-# Convert col3 to date type for proper comparison
-df = df.withColumn("col3", df["col3"].cast("date"))
+# Get the number of partitions
+num_partitions = df.rdd.getNumPartitions()
 
-# Get the latest date for each (col1, col2) group
-result_df = df.groupBy("col1", "col2").agg(max("col3").alias("latest_date"))
+# Add a row number column by dividing the ID by the number of partitions
+df_with_row_number = df_with_id.withColumn('row_number', (col('id') / num_partitions).cast('integer'))
 
-# Join back to get the original rows with the latest date
-final_df = df.join(result_df, (df["col1"] == result_df["col1"]) & (df["col2"] == result_df["col2"]) & (df["col3"] == result_df["latest_date"]))\
-             .select(df["col1"], df["col2"], df["col3"])
+# Show the DataFrame with the row number
+df_with_row_number.show()
 
-# Show the result
-final_df.show()
-
-# Save the final DataFrame to a Delta table partitioned by col3
-final_df.write.format("delta").mode("overwrite").partitionBy("col3").save("/path/to/delta-table")
-
-# Read the Delta table
-delta_df = spark.read.format("delta").load("/path/to/delta-table")
-
-# Get the latest date for each (col1, col2) group
-latest_df = delta_df.groupBy("col1", "col2").agg(max("col3").alias("latest_date"))
-
-# Join back to get the original rows with the latest date
-result_df = delta_df.join(latest_df, (delta_df["col1"] == latest_df["col1"]) & (delta_df["col2"] == latest_df["col2"]) & (delta_df["col3"] == latest_df["latest_date"]))\
-                    .select(delta_df["col1"], delta_df["col2"], delta_df["col3"])
-
-# Show the result
-result_df.show()
+# Optionally, save the DataFrame with row numbers back to a file
+df_with_row_number.write.csv('/path/to/save/with_row_numbers.csv', header=True)
