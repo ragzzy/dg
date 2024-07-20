@@ -1,23 +1,53 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import monotonically_increasing_id, col
+from pyspark.sql.functions import explode, col
 
 # Initialize Spark session
-spark = SparkSession.builder.appName("AddRowNumber").getOrCreate()
+spark = SparkSession.builder \
+    .appName("JsonArrayToDataFrame") \
+    .getOrCreate()
 
-# Read the file into a DataFrame
-df = spark.read.csv('/path/to/your/file.csv', header=True, inferSchema=True)
+# JSON data
+json_data = '''
+{
+    "otherAttribute1": "someValue",
+    "otherAttribute2": "anotherValue",
+    "columns": [
+        {
+            "randomKey1": {
+                "field1": "value1",
+                "field2": "value2"
+            }
+        },
+        {
+            "randomKey2": {
+                "field1": "value3",
+                "field2": "value4"
+            }
+        }
+    ]
+}
+'''
 
-# Add a monotonically increasing ID column
-df_with_id = df.withColumn('id', monotonically_increasing_id())
+# Create RDD and DataFrame
+rdd = spark.sparkContext.parallelize([json_data])
+df = spark.read.json(rdd)
 
-# Get the number of partitions
-num_partitions = df.rdd.getNumPartitions()
+# Extract the "columns" array
+columns_df = df.select("columns")
 
-# Add a row number column by dividing the ID by the number of partitions
-df_with_row_number = df_with_id.withColumn('row_number', (col('id') / num_partitions).cast('integer'))
+# Explode and flatten the "columns" DataFrame
+exploded_df = columns_df.select(explode(col("columns")).alias("key", "value"))
+flattened_df = exploded_df.select(
+    col("key"),
+    col("value.field1").alias("field1"),
+    col("value.field2").alias("field2")
+)
 
-# Show the DataFrame with the row number
-df_with_row_number.show()
+# Extract additional attributes
+attributes_df = df.select("otherAttribute1", "otherAttribute2")
 
-# Optionally, save the DataFrame with row numbers back to a file
-df_with_row_number.write.csv('/path/to/save/with_row_numbers.csv', header=True)
+# Cross join to add the attributes to each row of the flattened DataFrame
+final_df = flattened_df.crossJoin(attributes_df)
+
+# Show the result
+final_df.show()
