@@ -34,13 +34,15 @@ with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
 # Move the buffer position to the beginning
 zip_buffer.seek(0)
 
-# Save the in-memory ZIP file to a temporary file
-temp_zip_filename = "/tmp/output_file.zip"
+# Define DBFS paths for the temporary and output ZIP files
+temp_zip_filename = "/dbfs/tmp/output_file.zip"
+output_zip_filename = "/dbfs/tmp/protected_output_file.zip"
+
+# Save the in-memory ZIP file to a DBFS temporary file
 with open(temp_zip_filename, 'wb') as f:
     f.write(zip_buffer.read())
 
 # Compress the ZIP file with a password
-output_zip_filename = "/tmp/protected_output_file.zip"
 pyminizip.compress(temp_zip_filename, None, output_zip_filename, password, 5)
 
 # Optionally, upload the password-protected ZIP file back to Azure Blob Storage
@@ -49,7 +51,7 @@ output_blob_client = container_client.get_blob_client(output_blob_name)
 with open(output_zip_filename, "rb") as data:
     output_blob_client.upload_blob(data)
 
-# Clean up temporary files
+# Clean up temporary files in DBFS
 os.remove(temp_zip_filename)
 os.remove(output_zip_filename)
 
