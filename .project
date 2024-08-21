@@ -1,58 +1,26 @@
-# Install necessary libraries
-%pip install azure-storage-blob pyminizip
+import nzpy
 
-from azure.storage.blob import BlobServiceClient
-import io
-import zipfile
-import pyminizip
-import os
+# Define your connection parameters
+conn = nzpy.connect(
+    user="your_username",
+    password="your_password",
+    host="your_server_name",
+    port=5480,
+    database="your_database_name",
+    securityLevel=1  # Use 0 for unencrypted, 1 for encrypted connection
+)
 
-# Set up Azure Blob Storage client
-connection_string = "your_connection_string"  # Replace with your Azure Storage connection string
-container_name = "your_container_name"        # Replace with your container name
-password = "your_password"                    # Replace with your desired password for the ZIP file
+# Create a cursor object
+cursor = conn.cursor()
 
-# Initialize the BlobServiceClient
-blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-container_client = blob_service_client.get_container_client(container_name)
+# Execute a query
+cursor.execute("SELECT * FROM your_table_name")
 
-# List blobs in the container
-blob_list = container_client.list_blobs()
+# Fetch the results
+rows = cursor.fetchall()
 
-# Temporary buffer to hold the zip file in memory
-zip_buffer = io.BytesIO()
+for row in rows:
+    print(row)
 
-# Create a ZIP file in memory and add each blob to it
-with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-    for blob in blob_list:
-        blob_client = container_client.get_blob_client(blob)
-        # Download blob as bytes
-        blob_data = blob_client.download_blob().readall()
-        # Write blob data to the ZIP file with the blob's name as the file name
-        zip_file.writestr(blob.name, blob_data)
-
-# Move the buffer position to the beginning
-zip_buffer.seek(0)
-
-# Define DBFS paths for the temporary and output ZIP files
-temp_zip_filename = "/dbfs/tmp/output_file.zip"
-output_zip_filename = "/dbfs/tmp/protected_output_file.zip"
-
-# Save the in-memory ZIP file to a DBFS temporary file
-with open(temp_zip_filename, 'wb') as f:
-    f.write(zip_buffer.read())
-
-# Compress the ZIP file with a password
-pyminizip.compress(temp_zip_filename, None, output_zip_filename, password, 5)
-
-# Optionally, upload the password-protected ZIP file back to Azure Blob Storage
-output_blob_name = "protected_output_file.zip"
-output_blob_client = container_client.get_blob_client(output_blob_name)
-with open(output_zip_filename, "rb") as data:
-    output_blob_client.upload_blob(data)
-
-# Clean up temporary files in DBFS
-os.remove(temp_zip_filename)
-os.remove(output_zip_filename)
-
-print(f"Password-protected ZIP file '{output_blob_name}' has been created and uploaded to Azure Blob Storage.")
+# Close the connection
+conn.close()
