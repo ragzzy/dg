@@ -1,26 +1,28 @@
-import nzpy
+Here are some interview questions that you can use to assess a mid-level candidate's experience and skills in Azure Cloud Data Engineering, Python, PySpark, Snowflake administration, and Databricks:
 
-# Define your connection parameters
-conn = nzpy.connect(
-    user="your_username",
-    password="your_password",
-    host="your_server_name",
-    port=5480,
-    database="your_database_name",
-    securityLevel=1  # Use 0 for unencrypted, 1 for encrypted connection
-)
+### Azure Cloud Data Engineering
+1. **Describe a project where you utilized Azure Data Factory (ADF). What challenges did you encounter, and how did you overcome them?**
+2. **How do you manage data security and compliance on Azure? Can you provide examples of services or features you have used?**
+3. **Explain how you would design a data pipeline on Azure for processing large volumes of data. What services would you use, and why?**
 
-# Create a cursor object
-cursor = conn.cursor()
+### Python and PySpark
+4. **Can you explain how you've used PySpark to optimize data processing tasks? What are some performance tuning techniques you’ve applied?**
+5. **How do you handle error handling and logging in your Python scripts used for data engineering?**
+6. **What are some of the common performance bottlenecks you’ve encountered while working with PySpark, and how did you address them?**
 
-# Execute a query
-cursor.execute("SELECT * FROM your_table_name")
+### Snowflake Administration
+7. **Walk me through the steps you would take to optimize a slow-running query in Snowflake.**
+8. **How have you managed Snowflake accounts, users, and roles? Can you discuss the security best practices you follow?**
+9. **Explain how you would set up data sharing between multiple Snowflake accounts. What considerations need to be taken into account?**
 
-# Fetch the results
-rows = cursor.fetchall()
+### Databricks
+10. **How have you used Databricks for ETL processes? Can you provide an example of a complex pipeline you built?**
+11. **Describe a situation where you needed to scale a Databricks cluster. What factors did you consider when doing this?**
+12. **What are some best practices for managing and organizing notebooks in Databricks? How do you ensure code quality and maintainability?**
 
-for row in rows:
-    print(row)
+### General Data Engineering Concepts
+13. **How do you approach data versioning and lineage in your data pipelines?**
+14. **What is your strategy for handling schema changes in data sources?**
+15. **Describe a time when you had to troubleshoot a failing data pipeline. What steps did you take to identify and resolve the issue?**
 
-# Close the connection
-conn.close()
+These questions should help you evaluate the candidate’s technical skills, problem-solving abilities, and experience with the specific tools and platforms they’ll be working with.
