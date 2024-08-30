@@ -1,0 +1,52 @@
+Here’s a list of mid-level Snowflake developer interview questions:
+
+### **Snowflake Architecture & Basics**
+1. **What are the key components of Snowflake's architecture?**
+2. **Explain the concept of a Virtual Warehouse in Snowflake. How does it relate to performance?**
+3. **How does Snowflake handle data storage and compute resources?**
+4. **What are micro-partitions in Snowflake, and how do they impact performance?**
+5. **What are some advantages of Snowflake's multi-cluster architecture?**
+
+### **Data Loading and Unloading**
+6. **Describe the process of loading data into Snowflake. What methods can be used?**
+7. **How do you optimize the loading of large datasets into Snowflake?**
+8. **Explain the use of `COPY INTO` command for data loading.**
+9. **How would you unload data from Snowflake into a cloud storage service like S3 or Azure Blob Storage?**
+10. **What are the key considerations when working with semi-structured data formats like JSON in Snowflake?**
+
+### **Data Modeling & Schema Design**
+11. **How would you design a schema in Snowflake for optimal performance?**
+12. **Explain the concept of Time Travel in Snowflake and how it can be used in data modeling.**
+13. **How does Snowflake handle schema changes or data migration?**
+14. **What are clustering keys, and how do they influence query performance?**
+15. **Describe the differences between a star schema and a snowflake schema. When would you use each in Snowflake?**
+
+### **Query Performance & Optimization**
+16. **What are some common techniques to optimize query performance in Snowflake?**
+17. **How do you use the `QUERY_HISTORY` and `TABLE_STORAGE_METRICS` views to analyze and optimize queries?**
+18. **What are result caching, query caching, and metadata caching in Snowflake? How do they affect performance?**
+19. **How does Snowflake handle concurrency, and what techniques can be used to improve it?**
+20. **Explain how to optimize a slow-running query in Snowflake.**
+
+### **Security & Access Control**
+21. **How does Snowflake handle data encryption?**
+22. **What are the different roles and privileges in Snowflake, and how do you manage access control?**
+23. **Explain the concept of Secure Views in Snowflake.**
+24. **How can you audit user activity in Snowflake?**
+25. **What are Masking Policies in Snowflake, and how are they used?**
+
+### **Advanced Features**
+26. **What is Snowpipe, and how does it work for continuous data loading?**
+27. **Explain the concept of Snowflake Streams and Tasks. How are they used together?**
+28. **What are Materialized Views in Snowflake, and when would you use them?**
+29. **How does Snowflake's data sharing feature work? What are some common use cases?**
+30. **Describe the role of External Functions in Snowflake. How do they extend Snowflake's capabilities?**
+
+### **Troubleshooting & Best Practices**
+31. **How do you troubleshoot data load errors in Snowflake?**
+32. **What are some best practices for managing and organizing Snowflake databases, schemas, and tables?**
+33. **How would you handle a situation where a user complains about slow query performance?**
+34. **Explain how to handle missing or incomplete data during ETL processes in Snowflake.**
+35. **What steps would you take to ensure the scalability of a Snowflake implementation?**
+
+These questions are designed to test both the theoretical knowledge and practical experience of candidates, ensuring they have a solid understanding of Snowflake’s capabilities and best practices.
