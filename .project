@@ -1,28 +1,81 @@
-Here are some interview questions that you can use to assess a mid-level candidate's experience and skills in Azure Cloud Data Engineering, Python, PySpark, Snowflake administration, and Databricks:
+# Import required module for Azure Storage
+Import-Module Az.Storage
 
-### Azure Cloud Data Engineering
-1. **Describe a project where you utilized Azure Data Factory (ADF). What challenges did you encounter, and how did you overcome them?**
-2. **How do you manage data security and compliance on Azure? Can you provide examples of services or features you have used?**
-3. **Explain how you would design a data pipeline on Azure for processing large volumes of data. What services would you use, and why?**
+# UNC path and credentials
+$uncPath = "\\YourFileServer\YourShareName"
+$uncUser = "YourUsername"
+$uncPassword = "YourPassword" | ConvertTo-SecureString -AsPlainText -Force
+$uncCredential = New-Object System.Management.Automation.PSCredential ($uncUser, $uncPassword)
 
-### Python and PySpark
-4. **Can you explain how you've used PySpark to optimize data processing tasks? What are some performance tuning techniques you’ve applied?**
-5. **How do you handle error handling and logging in your Python scripts used for data engineering?**
-6. **What are some of the common performance bottlenecks you’ve encountered while working with PySpark, and how did you address them?**
+# Azure Storage Account details
+$resourceGroupName = "YourResourceGroupName"
+$storageAccountName = "YourStorageAccountName"
+$containerName = "YourContainerName"
 
-### Snowflake Administration
-7. **Walk me through the steps you would take to optimize a slow-running query in Snowflake.**
-8. **How have you managed Snowflake accounts, users, and roles? Can you discuss the security best practices you follow?**
-9. **Explain how you would set up data sharing between multiple Snowflake accounts. What considerations need to be taken into account?**
+# Function to recursively search for "triggers" directory
+function Find-TriggersDirectory {
+    param (
+        [string]$path
+    )
+    
+    $triggersDir = Get-ChildItem -Path $path -Directory -Recurse | Where-Object { $_.Name -eq "triggers" }
+    return $triggersDir
+}
 
-### Databricks
-10. **How have you used Databricks for ETL processes? Can you provide an example of a complex pipeline you built?**
-11. **Describe a situation where you needed to scale a Databricks cluster. What factors did you consider when doing this?**
-12. **What are some best practices for managing and organizing notebooks in Databricks? How do you ensure code quality and maintainability?**
+# Function to move files and copy to Azure Storage
+function Process-TriggerFiles {
+    param (
+        [string]$triggersPath,
+        [string]$topTriggersPath
+    )
+    
+    $txtFiles = Get-ChildItem -Path $triggersPath -Filter "*.txt"
+    
+    foreach ($file in $txtFiles) {
+        # Move file to topTriggers directory
+        $destinationPath = Join-Path -Path $topTriggersPath -ChildPath $file.Name
+        Move-Item -Path $file.FullName -Destination $destinationPath -Force
+        
+        # Copy file to Azure Storage Account
+        $ctx = (Get-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName).Context
+        Set-AzStorageBlobContent -File $destinationPath -Container $containerName -Blob $file.Name -Context $ctx -UseConnectedAccount
+    }
+}
 
-### General Data Engineering Concepts
-13. **How do you approach data versioning and lineage in your data pipelines?**
-14. **What is your strategy for handling schema changes in data sources?**
-15. **Describe a time when you had to troubleshoot a failing data pipeline. What steps did you take to identify and resolve the issue?**
+# Connect to Azure (for storage account access)
+Connect-AzAccount -UseDeviceAuthentication
 
-These questions should help you evaluate the candidate’s technical skills, problem-solving abilities, and experience with the specific tools and platforms they’ll be working with.
+# Map the UNC path to a drive letter
+$driveLetter = "Z"
+New-PSDrive -Name $driveLetter -PSProvider FileSystem -Root $uncPath -Credential $uncCredential -Persist
+
+try {
+    # Change to the mapped drive
+    Set-Location "${driveLetter}:"
+
+    # Find "triggers" directories
+    $triggersDirs = Find-TriggersDirectory -path "."
+
+    # Process each "triggers" directory
+    foreach ($triggersDir in $triggersDirs) {
+        $parentPath = Split-Path -Parent $triggersDir.FullName
+        $topTriggersPath = Join-Path -Path $parentPath -ChildPath "topTriggers"
+        
+        # Create topTriggers directory if it doesn't exist
+        if (-not (Test-Path $topTriggersPath)) {
+            New-Item -Path $topTriggersPath -ItemType Directory
+        }
+        
+        # Process trigger files
+        Process-TriggerFiles -triggersPath $triggersDir.FullName -topTriggersPath $topTriggersPath
+    }
+}
+finally {
+    # Change back to a safe location
+    Set-Location $env:USERPROFILE
+
+    # Remove the mapped drive
+    Remove-PSDrive -Name $driveLetter -Force
+
+    # Disconnect from Azure
+    Disconnect-AzAccount
