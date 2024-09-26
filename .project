@@ -10,12 +10,10 @@ fake = Faker()
 num_records = 200000
 num_columns = 30
 
-# Define column types
+# Define generic column types
 column_types = [
-    'name', 'job', 'email', 'phone_number', 'address', 'date', 'time',
-    'integer', 'float', 'boolean', 'color', 'company', 'url', 'ipv4',
-    'credit_card', 'currency', 'user_agent', 'isbn', 'license_plate',
-    'latitude', 'longitude'
+    'text', 'number', 'date', 'boolean', 'category',
+    'id', 'code', 'percentage', 'rating', 'status'
 ]
 
 # Extend the list to have at least 30 items
@@ -24,58 +22,36 @@ while len(column_types) < num_columns:
 column_types = column_types[:num_columns]
 
 def generate_fake_data(data_type):
-    if data_type == 'name':
-        return fake.name().replace('\n', ' ').replace('\r', '')
-    elif data_type == 'job':
-        return fake.job().replace('\n', ' ').replace('\r', '')
-    elif data_type == 'email':
-        return fake.email()
-    elif data_type == 'phone_number':
-        return fake.phone_number()
-    elif data_type == 'address':
-        return fake.address().replace('\n', ', ').replace('\r', '')
+    if data_type == 'text':
+        return fake.text(max_nb_chars=50).replace('\n', ' ').replace('\r', '')
+    elif data_type == 'number':
+        return str(random.randint(1, 1000000))
     elif data_type == 'date':
         return fake.date_between(start_date='-30y', end_date='today').isoformat()
-    elif data_type == 'time':
-        return fake.time()
-    elif data_type == 'integer':
-        return str(random.randint(1, 1000000))
-    elif data_type == 'float':
-        return f"{random.uniform(0, 1000):.2f}"
     elif data_type == 'boolean':
         return str(random.choice([True, False]))
-    elif data_type == 'color':
-        return fake.color_name()
-    elif data_type == 'company':
-        return fake.company().replace('\n', ' ').replace('\r', '')
-    elif data_type == 'url':
-        return fake.url()
-    elif data_type == 'ipv4':
-        return fake.ipv4()
-    elif data_type == 'credit_card':
-        return fake.credit_card_number()
-    elif data_type == 'currency':
-        return f"{random.uniform(0, 10000):.2f} {fake.currency_code()}"
-    elif data_type == 'user_agent':
-        return fake.user_agent()
-    elif data_type == 'isbn':
-        return fake.isbn13()
-    elif data_type == 'license_plate':
-        return fake.license_plate()
-    elif data_type == 'latitude':
-        return str(fake.latitude())
-    elif data_type == 'longitude':
-        return str(fake.longitude())
+    elif data_type == 'category':
+        return fake.word()
+    elif data_type == 'id':
+        return fake.uuid4()
+    elif data_type == 'code':
+        return fake.bothify(text='??##??##', letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    elif data_type == 'percentage':
+        return f"{random.uniform(0, 100):.2f}%"
+    elif data_type == 'rating':
+        return str(random.randint(1, 5))
+    elif data_type == 'status':
+        return random.choice(['Active', 'Inactive', 'Pending', 'Completed', 'Cancelled'])
     else:
         return fake.word()
 
 # Generate and write data to a CSV file
-output_file = 'fake_data.txt'
+output_file = 'generic_data.txt'
 
 with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
     writer = csv.writer(csvfile, delimiter='\t')
     
-    # Write header
+    # Write header with generic column names
     writer.writerow([f"Column_{i+1}" for i in range(num_columns)])
     
     # Write data rows
