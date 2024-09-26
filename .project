@@ -1,81 +1,86 @@
-# Import required module for Azure Storage
-Import-Module Az.Storage
+import csv
+from faker import Faker
+import random
+from datetime import datetime, timedelta
 
-# UNC path and credentials
-$uncPath = "\\YourFileServer\YourShareName"
-$uncUser = "YourUsername"
-$uncPassword = "YourPassword" | ConvertTo-SecureString -AsPlainText -Force
-$uncCredential = New-Object System.Management.Automation.PSCredential ($uncUser, $uncPassword)
+# Initialize Faker
+fake = Faker()
 
-# Azure Storage Account details
-$resourceGroupName = "YourResourceGroupName"
-$storageAccountName = "YourStorageAccountName"
-$containerName = "YourContainerName"
+# Define the number of records and columns
+num_records = 200000
+num_columns = 30
 
-# Function to recursively search for "triggers" directory
-function Find-TriggersDirectory {
-    param (
-        [string]$path
-    )
+# Define column types
+column_types = [
+    'name', 'job', 'email', 'phone_number', 'address', 'date', 'time',
+    'integer', 'float', 'boolean', 'color', 'company', 'url', 'ipv4',
+    'credit_card', 'currency', 'user_agent', 'isbn', 'license_plate',
+    'latitude', 'longitude'
+]
+
+# Extend the list to have at least 30 items
+while len(column_types) < num_columns:
+    column_types.extend(column_types)
+column_types = column_types[:num_columns]
+
+def generate_fake_data(data_type):
+    if data_type == 'name':
+        return fake.name().replace('\n', ' ').replace('\r', '')
+    elif data_type == 'job':
+        return fake.job().replace('\n', ' ').replace('\r', '')
+    elif data_type == 'email':
+        return fake.email()
+    elif data_type == 'phone_number':
+        return fake.phone_number()
+    elif data_type == 'address':
+        return fake.address().replace('\n', ', ').replace('\r', '')
+    elif data_type == 'date':
+        return fake.date_between(start_date='-30y', end_date='today').isoformat()
+    elif data_type == 'time':
+        return fake.time()
+    elif data_type == 'integer':
+        return str(random.randint(1, 1000000))
+    elif data_type == 'float':
+        return f"{random.uniform(0, 1000):.2f}"
+    elif data_type == 'boolean':
+        return str(random.choice([True, False]))
+    elif data_type == 'color':
+        return fake.color_name()
+    elif data_type == 'company':
+        return fake.company().replace('\n', ' ').replace('\r', '')
+    elif data_type == 'url':
+        return fake.url()
+    elif data_type == 'ipv4':
+        return fake.ipv4()
+    elif data_type == 'credit_card':
+        return fake.credit_card_number()
+    elif data_type == 'currency':
+        return f"{random.uniform(0, 10000):.2f} {fake.currency_code()}"
+    elif data_type == 'user_agent':
+        return fake.user_agent()
+    elif data_type == 'isbn':
+        return fake.isbn13()
+    elif data_type == 'license_plate':
+        return fake.license_plate()
+    elif data_type == 'latitude':
+        return str(fake.latitude())
+    elif data_type == 'longitude':
+        return str(fake.longitude())
+    else:
+        return fake.word()
+
+# Generate and write data to a CSV file
+output_file = 'fake_data.txt'
+
+with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+    writer = csv.writer(csvfile, delimiter='\t')
     
-    $triggersDir = Get-ChildItem -Path $path -Directory -Recurse | Where-Object { $_.Name -eq "triggers" }
-    return $triggersDir
-}
-
-# Function to move files and copy to Azure Storage
-function Process-TriggerFiles {
-    param (
-        [string]$triggersPath,
-        [string]$topTriggersPath
-    )
+    # Write header
+    writer.writerow([f"Column_{i+1}" for i in range(num_columns)])
     
-    $txtFiles = Get-ChildItem -Path $triggersPath -Filter "*.txt"
-    
-    foreach ($file in $txtFiles) {
-        # Move file to topTriggers directory
-        $destinationPath = Join-Path -Path $topTriggersPath -ChildPath $file.Name
-        Move-Item -Path $file.FullName -Destination $destinationPath -Force
-        
-        # Copy file to Azure Storage Account
-        $ctx = (Get-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName).Context
-        Set-AzStorageBlobContent -File $destinationPath -Container $containerName -Blob $file.Name -Context $ctx -UseConnectedAccount
-    }
-}
+    # Write data rows
+    for _ in range(num_records):
+        row = [generate_fake_data(column_types[i]) for i in range(num_columns)]
+        writer.writerow(row)
 
-# Connect to Azure (for storage account access)
-Connect-AzAccount -UseDeviceAuthentication
-
-# Map the UNC path to a drive letter
-$driveLetter = "Z"
-New-PSDrive -Name $driveLetter -PSProvider FileSystem -Root $uncPath -Credential $uncCredential -Persist
-
-try {
-    # Change to the mapped drive
-    Set-Location "${driveLetter}:"
-
-    # Find "triggers" directories
-    $triggersDirs = Find-TriggersDirectory -path "."
-
-    # Process each "triggers" directory
-    foreach ($triggersDir in $triggersDirs) {
-        $parentPath = Split-Path -Parent $triggersDir.FullName
-        $topTriggersPath = Join-Path -Path $parentPath -ChildPath "topTriggers"
-        
-        # Create topTriggers directory if it doesn't exist
-        if (-not (Test-Path $topTriggersPath)) {
-            New-Item -Path $topTriggersPath -ItemType Directory
-        }
-        
-        # Process trigger files
-        Process-TriggerFiles -triggersPath $triggersDir.FullName -topTriggersPath $topTriggersPath
-    }
-}
-finally {
-    # Change back to a safe location
-    Set-Location $env:USERPROFILE
-
-    # Remove the mapped drive
-    Remove-PSDrive -Name $driveLetter -Force
-
-    # Disconnect from Azure
-    Disconnect-AzAccount
+print(f"Generated {num_records} records with {num_columns} columns in {output_file}")
