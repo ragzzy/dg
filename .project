@@ -1,62 +1,42 @@
-import csv
-from faker import Faker
-import random
-from datetime import datetime, timedelta
+# Stage 1: Auto Load pointer files
+def process_pointer_files(spark):
+    return (spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "json")  # Assuming pointer files are in JSON format
+        .option("cloudFiles.schemaLocation", "/path/to/pointer_schema")
+        .load("abfss://container@account.dfs.core.windows.net/pointer_files_path")
+        .select("file_path")  # Assuming the pointer file contains a 'file_path' field
+    )
 
-# Initialize Faker
-fake = Faker()
+# Stage 2: Process files referenced by pointers
+def process_referenced_files(pointer_df):
+    def process_batch(batch_df, batch_id):
+        for row in batch_df.collect():
+            file_path = row['file_path']
+            
+            # Read the referenced file
+            referenced_df = spark.read.format("delta").load(file_path)
+            
+            # Process the referenced file (add your transformations here)
+            processed_df = referenced_df.select(...).filter(...).groupBy(...).agg(...)
+            
+            # Write the processed data
+            (processed_df.write
+                .format("delta")
+                .mode("append")
+                .saveAsTable("processed_data")
+            )
 
-# Define the number of records and columns
-num_records = 200000
-num_columns = 30
+    return (pointer_df.writeStream
+        .foreachBatch(process_batch)
+        .option("checkpointLocation", "/path/to/processing_checkpoint")
+        .start()
+    )
 
-# Define generic column types
-column_types = [
-    'text', 'number', 'date', 'boolean', 'category',
-    'id', 'code', 'percentage', 'rating', 'status'
-]
-
-# Extend the list to have at least 30 items
-while len(column_types) < num_columns:
-    column_types.extend(column_types)
-column_types = column_types[:num_columns]
-
-def generate_fake_data(data_type):
-    if data_type == 'text':
-        return fake.text(max_nb_chars=50).replace('\n', ' ').replace('\r', '')
-    elif data_type == 'number':
-        return str(random.randint(1, 1000000))
-    elif data_type == 'date':
-        return fake.date_between(start_date='-30y', end_date='today').isoformat()
-    elif data_type == 'boolean':
-        return str(random.choice([True, False]))
-    elif data_type == 'category':
-        return fake.word()
-    elif data_type == 'id':
-        return fake.uuid4()
-    elif data_type == 'code':
-        return fake.bothify(text='??##??##', letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-    elif data_type == 'percentage':
-        return f"{random.uniform(0, 100):.2f}%"
-    elif data_type == 'rating':
-        return str(random.randint(1, 5))
-    elif data_type == 'status':
-        return random.choice(['Active', 'Inactive', 'Pending', 'Completed', 'Cancelled'])
-    else:
-        return fake.word()
-
-# Generate and write data to a CSV file
-output_file = 'generic_data.txt'
-
-with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-    writer = csv.writer(csvfile, delimiter='\t')
+# Main execution
+if __name__ == "__main__":
+    spark = SparkSession.builder.appName("TwoStageAutoLoader").getOrCreate()
     
-    # Write header with generic column names
-    writer.writerow([f"Column_{i+1}" for i in range(num_columns)])
+    pointer_stream = process_pointer_files(spark)
+    query = process_referenced_files(pointer_stream)
     
-    # Write data rows
-    for _ in range(num_records):
-        row = [generate_fake_data(column_types[i]) for i in range(num_columns)]
-        writer.writerow(row)
-
-print(f"Generated {num_records} records with {num_columns} columns in {output_file}")
+    query.awaitTermination()
