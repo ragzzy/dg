@@ -1,42 +1,57 @@
-# Stage 1: Auto Load pointer files
-def process_pointer_files(spark):
-    return (spark.readStream.format("cloudFiles")
-        .option("cloudFiles.format", "json")  # Assuming pointer files are in JSON format
-        .option("cloudFiles.schemaLocation", "/path/to/pointer_schema")
-        .load("abfss://container@account.dfs.core.windows.net/pointer_files_path")
-        .select("file_path")  # Assuming the pointer file contains a 'file_path' field
-    )
+# Prompt the user for the directory path
+$directoryPath = Read-Host -Prompt "Enter the directory path"
 
-# Stage 2: Process files referenced by pointers
-def process_referenced_files(pointer_df):
-    def process_batch(batch_df, batch_id):
-        for row in batch_df.collect():
-            file_path = row['file_path']
-            
-            # Read the referenced file
-            referenced_df = spark.read.format("delta").load(file_path)
-            
-            # Process the referenced file (add your transformations here)
-            processed_df = referenced_df.select(...).filter(...).groupBy(...).agg(...)
-            
-            # Write the processed data
-            (processed_df.write
-                .format("delta")
-                .mode("append")
-                .saveAsTable("processed_data")
-            )
+# Check if the directory exists
+if (-not (Test-Path -Path $directoryPath -PathType Container)) {
+    Write-Host "Error: The specified directory does not exist."
+    exit
+}
 
-    return (pointer_df.writeStream
-        .foreachBatch(process_batch)
-        .option("checkpointLocation", "/path/to/processing_checkpoint")
-        .start()
-    )
+# Create a timestamp for the CSV file name
+$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$csvPath = "DirectoryFileInfo_$timestamp.csv"
 
-# Main execution
-if __name__ == "__main__":
-    spark = SparkSession.builder.appName("TwoStageAutoLoader").getOrCreate()
+# Create an array to store the results
+$results = @()
+
+# Get all files in the directory
+$files = Get-ChildItem -Path $directoryPath -File
+
+# Count the number of files
+$fileCount = $files.Count
+
+# Log the number of files
+$results += [PSCustomObject]@{
+    "Information" = "Number of files in the directory"
+    "Value" = $fileCount
+}
+
+# Log information for each file
+foreach ($file in $files) {
+    $fileName = $file.Name
+    $fileSize = $file.Length
+    $fileSizeFormatted = "{0:N2}" -f ($fileSize / 1MB)
     
-    pointer_stream = process_pointer_files(spark)
-    query = process_referenced_files(pointer_stream)
-    
-    query.awaitTermination()
+    $results += [PSCustomObject]@{
+        "Information" = "File"
+        "Value" = "$fileName (Size: $fileSizeFormatted MB)"
+    }
+}
+
+# Calculate and log total size of all files
+$totalSize = ($files | Measure-Object -Property Length -Sum).Sum
+$totalSizeFormatted = "{0:N2}" -f ($totalSize / 1MB)
+$results += [PSCustomObject]@{
+    "Information" = "Total size of all files"
+    "Value" = "$totalSizeFormatted MB"
+}
+
+# Export results to CSV
+$results | Export-Csv -Path $csvPath -NoTypeInformation
+
+# Display results on console
+$results | ForEach-Object {
+    Write-Host "$($_.Information): $($_.Value)"
+}
+
+Write-Host "`nResults have been logged to $csvPath"
