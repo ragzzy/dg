@@ -1,57 +1,59 @@
-# Prompt the user for the directory path
-$directoryPath = Read-Host -Prompt "Enter the directory path"
+# Ensure the Az module is installed
+# If not installed, run: Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -Force
 
-# Check if the directory exists
-if (-not (Test-Path -Path $directoryPath -PathType Container)) {
-    Write-Host "Error: The specified directory does not exist."
-    exit
-}
+# Import the Az module
+Import-Module Az
 
-# Create a timestamp for the CSV file name
-$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$csvPath = "DirectoryFileInfo_$timestamp.csv"
+# Function to invoke Azure Data Factory pipeline
+function Invoke-AdfPipeline {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$ResourceGroupName,
 
-# Create an array to store the results
-$results = @()
+        [Parameter(Mandatory=$true)]
+        [string]$DataFactoryName,
 
-# Get all files in the directory
-$files = Get-ChildItem -Path $directoryPath -File
+        [Parameter(Mandatory=$true)]
+        [string]$PipelineName,
 
-# Count the number of files
-$fileCount = $files.Count
+        [Parameter(Mandatory=$true)]
+        [hashtable]$Parameters
+    )
 
-# Log the number of files
-$results += [PSCustomObject]@{
-    "Information" = "Number of files in the directory"
-    "Value" = $fileCount
-}
+    try {
+        # Connect to Azure (you'll be prompted to log in if not already authenticated)
+        Connect-AzAccount
 
-# Log information for each file
-foreach ($file in $files) {
-    $fileName = $file.Name
-    $fileSize = $file.Length
-    $fileSizeFormatted = "{0:N2}" -f ($fileSize / 1MB)
-    
-    $results += [PSCustomObject]@{
-        "Information" = "File"
-        "Value" = "$fileName (Size: $fileSizeFormatted MB)"
+        # Invoke the pipeline
+        $runId = Invoke-AzDataFactoryV2Pipeline `
+            -ResourceGroupName $ResourceGroupName `
+            -DataFactoryName $DataFactoryName `
+            -PipelineName $PipelineName `
+            -Parameter $Parameters
+
+        Write-Host "Pipeline invoked successfully. Run ID: $runId"
+        return $runId
+    }
+    catch {
+        Write-Error "An error occurred: $_"
+        return $null
     }
 }
 
-# Calculate and log total size of all files
-$totalSize = ($files | Measure-Object -Property Length -Sum).Sum
-$totalSizeFormatted = "{0:N2}" -f ($totalSize / 1MB)
-$results += [PSCustomObject]@{
-    "Information" = "Total size of all files"
-    "Value" = "$totalSizeFormatted MB"
+# Example usage
+$resourceGroup = "YourResourceGroupName"
+$dataFactory = "YourDataFactoryName"
+$pipeline = "YourPipelineName"
+$params = @{
+    "param1" = "value1"
+    "param2" = "value2"
 }
 
-# Export results to CSV
-$results | Export-Csv -Path $csvPath -NoTypeInformation
+$runId = Invoke-AdfPipeline -ResourceGroupName $resourceGroup `
+                            -DataFactoryName $dataFactory `
+                            -PipelineName $pipeline `
+                            -Parameters $params
 
-# Display results on console
-$results | ForEach-Object {
-    Write-Host "$($_.Information): $($_.Value)"
+if ($runId) {
+    Write-Host "Pipeline run started. You can monitor the pipeline run using the Azure portal or Azure PowerShell."
 }
-
-Write-Host "`nResults have been logged to $csvPath"
