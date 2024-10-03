@@ -1,42 +1,42 @@
-# Stage 1: Auto Load pointer files
-def process_pointer_files(spark):
-    return (spark.readStream.format("cloudFiles")
-        .option("cloudFiles.format", "json")  # Assuming pointer files are in JSON format
-        .option("cloudFiles.schemaLocation", "/path/to/pointer_schema")
-        .load("abfss://container@account.dfs.core.windows.net/pointer_files_path")
-        .select("file_path")  # Assuming the pointer file contains a 'file_path' field
+from pyspark.sql.functions import input_file_name, current_timestamp
+
+def process_txt_files(spark):
+    return (spark.readStream
+        .format("cloudFiles")
+        .option("cloudFiles.format", "text")
+        .load("abfss://container@account.dfs.core.windows.net/parent_directory/*.txt")
+        .select(
+            "value",
+            input_file_name().alias("source_file"),
+            current_timestamp().alias("processed_time")
+        )
     )
 
-# Stage 2: Process files referenced by pointers
-def process_referenced_files(pointer_df):
-    def process_batch(batch_df, batch_id):
-        for row in batch_df.collect():
-            file_path = row['file_path']
-            
-            # Read the referenced file
-            referenced_df = spark.read.format("delta").load(file_path)
-            
-            # Process the referenced file (add your transformations here)
-            processed_df = referenced_df.select(...).filter(...).groupBy(...).agg(...)
-            
-            # Write the processed data
-            (processed_df.write
-                .format("delta")
-                .mode("append")
-                .saveAsTable("processed_data")
-            )
-
-    return (pointer_df.writeStream
-        .foreachBatch(process_batch)
-        .option("checkpointLocation", "/path/to/processing_checkpoint")
+def save_as_parquet(streaming_df):
+    return (streaming_df.writeStream
+        .format("parquet")
+        .option("checkpointLocation", "/path/to/checkpoint")
+        .option("path", "abfss://container@account.dfs.core.windows.net/output_directory")
+        .partitionBy("processed_time")  # Optional: partition by processing time
         .start()
     )
 
-# Main execution
+def main():
+    spark = SparkSession.builder.appName("TxtToParquetAutoLoader").getOrCreate()
+    
+    try:
+        # Start the streaming process
+        txt_stream = process_txt_files(spark)
+        query = save_as_parquet(txt_stream)
+        
+        # Wait for the streaming query to finish
+        query.awaitTermination()
+        
+    except Exception as e:
+        print(f"Error in main execution: {str(e)}")
+        raise
+    finally:
+        spark.stop()
+
 if __name__ == "__main__":
-    spark = SparkSession.builder.appName("TwoStageAutoLoader").getOrCreate()
-    
-    pointer_stream = process_pointer_files(spark)
-    query = process_referenced_files(pointer_stream)
-    
-    query.awaitTermination()
+    main()
