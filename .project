@@ -1,59 +1,42 @@
-# Ensure the Az module is installed
-# If not installed, run: Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -Force
-
-# Import the Az module
-Import-Module Az
-
-# Function to invoke Azure Data Factory pipeline
-function Invoke-AdfPipeline {
-    param (
-        [Parameter(Mandatory=$true)]
-        [string]$ResourceGroupName,
-
-        [Parameter(Mandatory=$true)]
-        [string]$DataFactoryName,
-
-        [Parameter(Mandatory=$true)]
-        [string]$PipelineName,
-
-        [Parameter(Mandatory=$true)]
-        [hashtable]$Parameters
+# Stage 1: Auto Load pointer files
+def process_pointer_files(spark):
+    return (spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "json")  # Assuming pointer files are in JSON format
+        .option("cloudFiles.schemaLocation", "/path/to/pointer_schema")
+        .load("abfss://container@account.dfs.core.windows.net/pointer_files_path")
+        .select("file_path")  # Assuming the pointer file contains a 'file_path' field
     )
 
-    try {
-        # Connect to Azure (you'll be prompted to log in if not already authenticated)
-        Connect-AzAccount
+# Stage 2: Process files referenced by pointers
+def process_referenced_files(pointer_df):
+    def process_batch(batch_df, batch_id):
+        for row in batch_df.collect():
+            file_path = row['file_path']
+            
+            # Read the referenced file
+            referenced_df = spark.read.format("delta").load(file_path)
+            
+            # Process the referenced file (add your transformations here)
+            processed_df = referenced_df.select(...).filter(...).groupBy(...).agg(...)
+            
+            # Write the processed data
+            (processed_df.write
+                .format("delta")
+                .mode("append")
+                .saveAsTable("processed_data")
+            )
 
-        # Invoke the pipeline
-        $runId = Invoke-AzDataFactoryV2Pipeline `
-            -ResourceGroupName $ResourceGroupName `
-            -DataFactoryName $DataFactoryName `
-            -PipelineName $PipelineName `
-            -Parameter $Parameters
+    return (pointer_df.writeStream
+        .foreachBatch(process_batch)
+        .option("checkpointLocation", "/path/to/processing_checkpoint")
+        .start()
+    )
 
-        Write-Host "Pipeline invoked successfully. Run ID: $runId"
-        return $runId
-    }
-    catch {
-        Write-Error "An error occurred: $_"
-        return $null
-    }
-}
-
-# Example usage
-$resourceGroup = "YourResourceGroupName"
-$dataFactory = "YourDataFactoryName"
-$pipeline = "YourPipelineName"
-$params = @{
-    "param1" = "value1"
-    "param2" = "value2"
-}
-
-$runId = Invoke-AdfPipeline -ResourceGroupName $resourceGroup `
-                            -DataFactoryName $dataFactory `
-                            -PipelineName $pipeline `
-                            -Parameters $params
-
-if ($runId) {
-    Write-Host "Pipeline run started. You can monitor the pipeline run using the Azure portal or Azure PowerShell."
-}
+# Main execution
+if __name__ == "__main__":
+    spark = SparkSession.builder.appName("TwoStageAutoLoader").getOrCreate()
+    
+    pointer_stream = process_pointer_files(spark)
+    query = process_referenced_files(pointer_stream)
+    
+    query.awaitTermination()
