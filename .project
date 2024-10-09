@@ -1,153 +1,92 @@
-from faker import Faker
-from azure.storage.blob import BlobServiceClient
-import json
-import random
-import io
-from reportlab.pdfgen import canvas
 from datetime import datetime
-import zipfile
-import tempfile
-import os
+from databricks_jobs import jobs_service_client
+from databricks.sdk.service.jobs import (
+    RunSubmit, 
+    NotebookTask, 
+    JobTaskSettings,
+    ExistingCluster
+)
 
-# Initialize Faker
-fake = Faker()
-
-# Azure Storage connection string - replace with your connection string
-connection_string = "YOUR_CONNECTION_STRING"
-container_name = "fake-files-container"
-
-def create_fake_text():
-    """Generate fake text content"""
-    paragraphs = [fake.paragraph() for _ in range(random.randint(3, 10))]
-    return "\n\n".join(paragraphs)
-
-def create_fake_json():
-    """Generate fake JSON content"""
-    return {
-        "id": fake.uuid4(),
-        "title": fake.catch_phrase(),
-        "description": fake.text(),
-        "timestamp": str(fake.date_time_this_year()),
-        "category": fake.word(),
-        "tags": [fake.word() for _ in range(random.randint(2, 5))],
-        "metadata": {
-            "author": fake.company(),
-            "version": f"{random.randint(1, 5)}.{random.randint(0, 9)}",
-            "status": random.choice(["draft", "published", "archived"])
-        }
-    }
-
-def create_fake_html():
-    """Generate fake HTML content"""
-    title = fake.catch_phrase()
-    paragraphs = [fake.paragraph() for _ in range(random.randint(3, 7))]
-    
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>{title}</title>
-    </head>
-    <body>
-        <h1>{title}</h1>
-        {''.join([f'<p>{p}</p>' for p in paragraphs])}
-    </body>
-    </html>
+def invoke_notebook_as_job(notebook_path: str, 
+                          job_name: str,
+                          cluster_id: str,
+                          parameters: dict = None,
+                          timeout_seconds: int = 3600):
     """
-    return html_content
-
-def create_fake_pdf():
-    """Generate fake PDF content"""
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer)
+    Invokes a Databricks notebook as a separate job on a specific cluster
     
-    # Add content to PDF
-    c.drawString(100, 750, fake.catch_phrase())
-    y_position = 700
-    for _ in range(random.randint(3, 7)):
-        text = fake.paragraph()
-        # Split long text into multiple lines
-        words = text.split()
-        line = ""
-        for word in words:
-            if len(line + word) < 70:
-                line += word + " "
-            else:
-                c.drawString(100, y_position, line)
-                y_position -= 20
-                line = word + " "
-        if line:
-            c.drawString(100, y_position, line)
-            y_position -= 20
+    Args:
+        notebook_path: Full path to the notebook in Databricks workspace
+        job_name: Name for the job run
+        cluster_id: ID of the existing cluster to run the job on
+        parameters: Dictionary of parameters to pass to the notebook
+        timeout_seconds: Maximum time to wait for job completion
     
-    c.save()
-    buffer.seek(0)
-    return buffer
+    Returns:
+        job_run_id: The ID of the submitted job run
+    """
+    
+    # Configure the notebook task
+    notebook_task = NotebookTask(
+        notebook_path=notebook_path,
+        base_parameters=parameters
+    )
+    
+    # Configure existing cluster settings
+    cluster_config = ExistingCluster(
+        cluster_id=cluster_id
+    )
+    
+    # Create the job submission
+    job_config = RunSubmit(
+        run_name=f"{job_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        tasks=[JobTaskSettings(
+            task_key="notebook_task",
+            notebook_task=notebook_task,
+            existing_cluster_id=cluster_id,  # Specify the cluster ID here
+            timeout_seconds=timeout_seconds
+        )]
+    )
+    
+    # Submit the job
+    run_response = jobs_service_client.create_run(job_config)
+    job_run_id = run_response.run_id
+    
+    print(f"Submitted job run with ID: {job_run_id} on cluster: {cluster_id}")
+    return job_run_id
 
-def upload_files_to_blob(spark):
-    """Main function to generate and upload files"""
-    try:
-        # Create blob service client
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+def get_cluster_id_by_name(cluster_name: str) -> str:
+    """
+    Helper function to get cluster ID from cluster name
+    
+    Args:
+        cluster_name: Name of the cluster
         
-        # Create container if it doesn't exist
-        try:
-            container_client = blob_service_client.create_container(container_name)
-        except:
-            container_client = blob_service_client.get_container_client(container_name)
-        
-        # Create temporary directory for files
-        temp_dir = tempfile.mkdtemp()
-        zip_path = os.path.join(temp_dir, "fake_files.zip")
-        
-        # Create ZIP file
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Generate and upload files
-            for i in range(100000):
-                file_type = random.choice(['txt', 'json', 'html', 'pdf'])
-                filename = f"fake_file_{i}.{file_type}"
-                
-                # Generate content based on file type
-                if file_type == 'txt':
-                    content = create_fake_text()
-                    blob = content.encode('utf-8')
-                elif file_type == 'json':
-                    content = create_fake_json()
-                    blob = json.dumps(content, indent=2).encode('utf-8')
-                elif file_type == 'html':
-                    content = create_fake_html()
-                    blob = content.encode('utf-8')
-                elif file_type == 'pdf':
-                    blob = create_fake_pdf().getvalue()
-                
-                # Upload to blob storage
-                blob_client = container_client.get_blob_client(filename)
-                blob_client.upload_blob(blob, overwrite=True)
-                
-                # Add to ZIP file
-                file_path = os.path.join(temp_dir, filename)
-                with open(file_path, 'wb') as f:
-                    f.write(blob)
-                zipf.write(file_path, filename)
-                os.remove(file_path)  # Clean up individual file
-                
-                # Log progress
-                if (i + 1) % 1000 == 0:
-                    print(f"Processed {i + 1} files")
-        
-        # Upload ZIP file to blob storage
-        zip_blob_client = container_client.get_blob_client("fake_files.zip")
-        with open(zip_path, 'rb') as zip_file:
-            zip_blob_client.upload_blob(zip_file, overwrite=True)
-        
-        # Clean up temporary directory
-        os.remove(zip_path)
-        os.rmdir(temp_dir)
-        
-        print("File generation and upload completed successfully!")
-        
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
+    Returns:
+        cluster_id: ID of the cluster if found, None otherwise
+    """
+    clusters = jobs_service_client.clusters.list()
+    for cluster in clusters:
+        if cluster.cluster_name == cluster_name:
+            return cluster.cluster_id
+    raise ValueError(f"Cluster with name '{cluster_name}' not found")
 
-# Execute the function
-spark.sparkContext.parallelize([1]).foreach(lambda x: upload_files_to_blob(spark))
+# Example usage
+if __name__ == "__main__":
+    notebook_params = {
+        "input_date": "2024-03-01",
+        "environment": "production"
+    }
+    
+    # Option 1: Using known cluster ID
+    cluster_id = "0318-235542-abc123"
+    
+    # Option 2: Getting cluster ID by name
+    # cluster_id = get_cluster_id_by_name("my-all-purpose-cluster")
+    
+    job_run_id = invoke_notebook_as_job(
+        notebook_path="/Users/your_username/path/to/target_notebook",
+        job_name="data_transformation_job",
+        cluster_id=cluster_id,
+        parameters=notebook_params
+    )
