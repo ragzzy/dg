@@ -1,135 +1,111 @@
-from datetime import datetime
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.jobs import (
-    Submit,
-    NotebookTask,
-    Task,
-    ExistingCluster
-)
+from datetime import datetime
 
-def get_cluster_id_by_name(cluster_name: str) -> str:
+def run_existing_job(
+    job_id: int,
+    parameters: dict = None,
+    notebook_params: dict = None
+) -> int:
     """
-    Helper function to get cluster ID from cluster name
+    Runs an existing Databricks job with specified parameters
     
     Args:
-        cluster_name: Name of the cluster
+        job_id: ID of the existing job to run
+        parameters: Dictionary of job-level parameters (if any)
+        notebook_params: Dictionary of notebook parameters (if any)
+    
+    Returns:
+        run_id: The ID of the job run
+    """
+    w = WorkspaceClient()
+    
+    try:
+        # Run the job with parameters
+        run_response = w.jobs.run_now(
+            job_id=job_id,
+            notebook_params=notebook_params,
+            python_params=parameters
+        )
+        
+        run_id = run_response.run_id
+        print(f"Started job run {run_id} for job {job_id}")
+        
+        # Optionally get the run info
+        run_info = w.jobs.get_run(run_id)
+        print(f"Run status: {run_info.state.life_cycle_state}")
+        
+        return run_id
+        
+    except Exception as e:
+        print(f"Error running job: {str(e)}")
+        raise
+
+def get_run_status(run_id: int) -> str:
+    """
+    Gets the current status of a job run
+    
+    Args:
+        run_id: The ID of the job run to check
         
     Returns:
-        cluster_id: ID of the cluster if found
+        status: Current status of the job run
     """
     w = WorkspaceClient()
-    clusters = w.clusters.list()
-    
-    for cluster in clusters:
-        if cluster.cluster_name == cluster_name:
-            # Check if cluster is running or in a pending state
-            if cluster.state.is_running or cluster.state.is_pending:
-                return cluster.cluster_id
-            else:
-                print(f"Cluster '{cluster_name}' found but is not running. Current state: {cluster.state}")
-                return cluster.cluster_id
-                
-    raise ValueError(f"Cluster with name '{cluster_name}' not found")
+    run_info = w.jobs.get_run(run_id)
+    return run_info.state.life_cycle_state
 
-def start_cluster_if_needed(cluster_id: str) -> None:
+def wait_for_job_completion(run_id: int, polling_interval: int = 30) -> dict:
     """
-    Starts the cluster if it's not already running
+    Waits for a job to complete and returns the final status
     
     Args:
-        cluster_id: ID of the cluster to check/start
-    """
-    w = WorkspaceClient()
-    cluster_info = w.clusters.get(cluster_id)
-    
-    if not (cluster_info.state.is_running or cluster_info.state.is_pending):
-        print(f"Starting cluster {cluster_id}...")
-        w.clusters.start(cluster_id)
-        print("Cluster start command issued. The job will begin once the cluster is ready.")
-
-def invoke_notebook_on_existing_cluster(
-        notebook_path: str,
-        job_name: str,
-        cluster_id: str = None,
-        cluster_name: str = None,
-        parameters: dict = None,
-        timeout_seconds: int = 3600):
-    """
-    Invokes a Databricks notebook on an existing interactive cluster
-    
-    Args:
-        notebook_path: Full path to the notebook in workspace
-        job_name: Name for the job run
-        cluster_id: ID of the existing cluster (optional if cluster_name provided)
-        cluster_name: Name of the existing cluster (optional if cluster_id provided)
-        parameters: Dictionary of parameters to pass to notebook
-        timeout_seconds: Maximum time to wait for job completion
-    
+        run_id: The ID of the job run to monitor
+        polling_interval: Number of seconds to wait between status checks
+        
     Returns:
-        job_run_id: The ID of the submitted job run
+        dict: Final job status information
     """
-    if not cluster_id and not cluster_name:
-        raise ValueError("Either cluster_id or cluster_name must be provided")
+    import time
     
     w = WorkspaceClient()
-    
-    # If cluster_name is provided but not cluster_id, get the cluster_id
-    if not cluster_id and cluster_name:
-        cluster_id = get_cluster_id_by_name(cluster_name)
-    
-    # Start the cluster if it's not running
-    start_cluster_if_needed(cluster_id)
-    
-    # Create task configuration
-    task = Task(
-        task_key="notebook_task",
-        description=f"Running notebook: {notebook_path}",
-        existing_cluster_id=cluster_id,  # Use existing cluster
-        notebook_task=NotebookTask(
-            notebook_path=notebook_path,
-            base_parameters=parameters
-        ),
-        timeout_seconds=timeout_seconds
-    )
-    
-    # Create the job submission
-    submit_args = Submit(
-        run_name=f"{job_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-        tasks=[task]
-    )
-    
-    # Submit the job
-    try:
-        run_response = w.jobs.submit(submit_args)
-        job_run_id = run_response.run_id
-        print(f"Submitted job run with ID: {job_run_id} on cluster: {cluster_id}")
-        return job_run_id
-    except Exception as e:
-        print(f"Error submitting job: {str(e)}")
-        raise
+    while True:
+        run_info = w.jobs.get_run(run_id)
+        state = run_info.state.life_cycle_state
+        
+        print(f"Current job state: {state}")
+        
+        # Check if the job has finished (successfully or not)
+        if state in ['TERMINATED', 'SKIPPED', 'INTERNAL_ERROR', 'FAILED']:
+            return {
+                'state': state,
+                'result_state': run_info.state.result_state,
+                'state_message': run_info.state.state_message
+            }
+            
+        time.sleep(polling_interval)
 
 # Example usage
 if __name__ == "__main__":
     try:
+        # Your existing job ID (you can find this in the URL when viewing the job)
+        job_id = 123456
+        
+        # Example notebook parameters
         notebook_params = {
             "input_date": "2024-03-01",
-            "environment": "production"
+            "environment": "production",
+            "data_path": "/mnt/data/raw/"
         }
         
-        # Option 1: Using cluster ID directly
-        job_run_id = invoke_notebook_on_existing_cluster(
-            notebook_path="/Users/your_username/path/to/target_notebook",
-            job_name="data_transformation_job",
-            cluster_id="0318-235542-abc123",  # Replace with your cluster ID
-            parameters=notebook_params
+        # Run the job
+        run_id = run_existing_job(
+            job_id=job_id,
+            notebook_params=notebook_params
         )
         
-        # Option 2: Using cluster name
-        # job_run_id = invoke_notebook_on_existing_cluster(
-        #     notebook_path="/Users/your_username/path/to/target_notebook",
-        #     job_name="data_transformation_job",
-        #     cluster_name="My Interactive Cluster",
-        #     parameters=notebook_params
-        # )
+        # Optional: Wait for job completion and get final status
+        final_status = wait_for_job_completion(run_id)
+        print(f"Job finished with status: {final_status}")
         
     except Exception as e:
-        print(f"Error in job submission process: {str(e)}")
+        print(f"Error in job execution process: {str(e)}")
